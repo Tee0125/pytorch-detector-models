@@ -1,0 +1,119 @@
+import os
+import multiprocessing
+import torch
+
+from torch.utils.data import DataLoader
+
+from nn import DetectPostProcess
+from utils import MeanAp
+
+from datasets import VOCDetection
+from transforms import detector_transforms as transforms
+
+
+class DetectionValidator:
+    def __init__(self, args, model):
+        self.args = args
+
+        self.model = model
+        self.post_process = DetectPostProcess(model.get_anchor_box())
+
+        self.dataset = self.init_dataset()
+        self.dataloader = self.init_dataloader()
+
+        self.data_cnt = len(self.dataset)
+        self.mAP = MeanAp(len(self.dataset.classes))
+
+    def __call__(self):
+        args = self.args
+
+        th_conf = args.th_conf
+        th_iou = args.th_iou
+
+        self.model.eval()
+        self.mAP.reset()
+
+        cnt = 0
+
+        for i, batch in enumerate(self.dataloader):
+            x, y = batch
+
+            if torch.cuda.is_available():
+                x = x.cuda()
+
+            print("[%d / %d]" % (cnt, self.data_cnt), end='\r')
+
+            with torch.no_grad():
+                conf, loc = self.model.forward(x)
+                y_ = self.post_process(conf, loc, th_iou, th_conf)
+
+            self.match(y_, y)
+
+            cnt += x.size(0)
+
+        print("[%d / %d]" % (cnt, self.data_cnt), end='\r')
+
+        mAP, aps = self.mAP.calc_mean_ap()
+
+        # print results
+        for cls, ap in enumerate(aps):
+            cls_name = self.dataset.decode_class(cls)
+
+            print("AP(%s) = %.3f" % (cls_name, ap))
+
+        print("mAP = %.3f" % mAP)
+
+
+    def match(self, y_, y):
+        for a, b in zip(y_, y):
+            self.mAP.match(a, b)
+
+    def init_dataset(self):
+        args = self.args
+
+        size = self.model.get_input_size()
+        root = os.path.join(args.dataset_root, args.dataset)
+
+        t = transforms.Compose((transforms.LetterBox(),
+                                transforms.Resize(size),
+                                transforms.ToTensor(),
+                                transforms.Normalize()))
+
+        if args.dataset == 'VOC':
+            dataset = VOCDetection(root,
+                                   year='2007',
+                                   #image_set='val',
+                                   image_set='test',
+                                   download=True,
+                                   transforms=t)
+        else:
+            raise Exception("unknown dataset '%s'" % args.dataset)
+
+        return dataset
+
+    def init_dataloader(self):
+        args = self.args
+
+        if args.num_workers < 0:
+            num_workers = multiprocessing.cpu_count()
+        else:
+            num_workers = args.num_workers
+
+        return DataLoader(self.dataset,
+                          pin_memory=True,
+                          batch_size=args.batch_size,
+                          num_workers=num_workers,
+                          collate_fn=self.collate)
+    
+    @staticmethod
+    def collate(batch):
+        imgs = []
+        targets = []
+
+        for (img, target) in batch:
+            imgs.append(img)
+            targets.append(target)
+
+        return torch.stack(imgs, 0), targets
+
+
