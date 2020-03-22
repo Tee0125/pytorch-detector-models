@@ -1,6 +1,17 @@
 
 PyTorch implementation of detector networks
 
+Trained SSD300 network achevied mAP 0.617 for VOC2007-test but it is much lower than number in the original paper
+
+Options used to train SSD300 is as in below:
+
+* --lr 1e-3
+* --use_multi_step_lr
+* --milestones 600 800 1000
+* --epoches 1200
+
+In my experiences, adding augumentation improves mAP so now I am working on adding more augumentations...
+
 # Pre-requisite
 
 ```
@@ -66,7 +77,7 @@ python detect_train.py --model ssdlite --use_multi_step_lr --milestones 500 600 
 Resume training
 
 ```
-python detect_train.py --resume checkpoints/checkpoint-ssdlite-latest.pth
+python detect_train.py --resume checkpoints/ssdlite_latest.pth
 ```
 
 # Test
@@ -82,7 +93,7 @@ python detect_test.py
 |---------------------|--------------|:-------:|
 | --model             | model name   | ssd300  |
 | --dataset           | dataset name | VOC     |
-| --weight            | weight file name | checkpoint/{model}_latest.pth |
+| --weight            | weight file name | checkpoints/{MODEL_NAME}_latest.pth |
 
 # Single run
 
@@ -94,7 +105,7 @@ python detect_single.py image1 [image2] [image3] [...]
 | name                | description | default |
 |---------------------|-------------|:-------:|
 | --model             | model name | ssd300 |
-| --weight            | weight file name | checkpoints/MODEL_NAME-latest.pth |
+| --weight            | weight file name | checkpoints/{MODEL_NAME}_latest.pth |
 | --th_conf           | confidence threshold | 0.5 |
 | --th_iou            | iou threshold | 0.5 |
 | --outfile           | save result to file | None |
