@@ -77,7 +77,7 @@ class Callback(TrainerCallback):
 
         t.save_model(postfix=postfix)
 
-    def fit_end(self, t):
+    def fit_end(self, t, loss):
         t.save_model(postfix='latest')
 
 
