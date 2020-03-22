@@ -37,16 +37,23 @@ class MeanAp:
         ap = []
         num_cls = self.num_cls
 
+        detected_all = []
+        num_truth_all = 0
+
         for cls in range(num_cls):
-            ap.append(self.calc_ap(cls))
+            detected = self.detected[cls]
+            num_truth = self.num_truth[cls]
 
-        return sum(ap) / num_cls, ap
+            ap.append(self.calc_ap(detected, num_truth))
 
-    def calc_ap(self, cls):
+            detected_all.extend(detected)
+            num_truth_all += num_truth
+
+        return self.calc_ap(detected_all, num_truth_all), ap
+
+    def calc_ap(self, detected, num_truth):
         k = lambda x: x['conf']
-        detected = sorted(self.detected[cls], key=k, reverse=True)
-
-        num_truth = self.num_truth[cls]
+        detected = sorted(detected, key=k, reverse=True)
 
         tp = fp = 0.
 
@@ -78,7 +85,7 @@ class MeanAp:
             ap += (recalls[i] - recalls[i-1]) * precisions[i]
 
         return ap
-        
+
     def parse_truths(self, targets):
         num_cls = self.num_cls
 
