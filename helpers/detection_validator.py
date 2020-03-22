@@ -63,7 +63,6 @@ class DetectionValidator:
 
         print("mAP = %.3f" % mAP)
 
-
     def match(self, y_, y):
         for a, b in zip(y_, y):
             self.mAP.match(a, b)
@@ -82,7 +81,6 @@ class DetectionValidator:
         if args.dataset == 'VOC':
             dataset = VOCDetection(root,
                                    year='2007',
-                                   #image_set='val',
                                    image_set='test',
                                    download=True,
                                    transforms=t)
