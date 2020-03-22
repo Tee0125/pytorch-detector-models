@@ -112,7 +112,7 @@ class DetectionTrainer:
 
         if args.dataset == 'VOC':
             dataset = VOCDetection(root,
-                                   year=('2007',)
+                                   year=('2007', '2012'),
                                    image_set='trainval',
                                    download=True,
                                    transforms=t)
