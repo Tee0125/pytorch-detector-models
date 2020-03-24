@@ -200,8 +200,11 @@ class SSD(nn.Module):
 
             l2_norms.append(nn.Norm2d(in_channels))
 
-            classifiers.append(nn.Conv2d(in_channels, n * self.num_class, 1))
-            box_regressions.append(nn.Conv2d(in_channels, n * 4, 1))
+            classifier = nn.Conv2d(in_channels, n * self.num_class, 3, 1, 1)
+            classifiers.append(classifier)
+
+            box_regression = nn.Conv2d(in_channels, n * 4, 3, 1, 1)
+            box_regressions.append(box_regression)
 
         self.init_parameters(classifiers)
         self.init_parameters(box_regressions)
