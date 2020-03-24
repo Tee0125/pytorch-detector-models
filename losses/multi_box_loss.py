@@ -12,7 +12,6 @@ class MultiBoxLoss:
         self.th_iou = th_iou
 
     def __call__(self, truth, conf, loc):
-
         _coord = []
         _label = []
 
@@ -45,7 +44,6 @@ class MultiBoxLoss:
         return self.calc_loss(coord, label, loc, conf)
 
     def truth2anchor(self, truth):
-
         # step1. matching strategy
         anchor = self.anchor.get_anchor()
 
@@ -91,24 +89,24 @@ class MultiBoxLoss:
         label = label.view(-1)
         conf = conf.view(-1, num_class)
 
+        # "positive" means label is not background
         pos_mask = label != 0
-        neg_mask = label == 0
-
         pos_conf = conf[pos_mask]
-        neg_conf = conf[neg_mask]
-
         pos_label = label[pos_mask]
-        neg_label = label[neg_mask]
 
+        # sort background confidence by loss in descending order
+        tmp = F.cross_entropy(conf, label, reduction='none')
+        tmp[pos_mask] = 0.
+
+        _, neg_indices = tmp.sort(descending=True)
+
+        # pick num(positive_samples)*3 of negative samples per batch
         num_pos = pos_conf.size(0)
-        num_neg = min(num_pos*3, neg_conf.size(0))
-        
-        mined = F.log_softmax(neg_conf, 1)[:, 0].sort()[1][0:num_neg]
+        num_neg = min(num_pos*3, conf.size(0) - num_pos)
 
-        neg_conf = neg_conf[mined]
-        neg_label = neg_label[mined]
+        neg_conf = conf[neg_indices[0:num_neg]]
+        neg_label = label[neg_indices[0:num_neg]]
 
-        # - calc l_conf
         conf = torch.cat([pos_conf, neg_conf], 0)
         label = torch.cat([pos_label, neg_label], 0)
 
