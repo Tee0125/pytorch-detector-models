@@ -157,48 +157,25 @@ class SSD(nn.Module):
         self.extras = nn.ModuleList(extras)
 
     def build_extra(self, in_channels, layers):
+        use_bn = self.params['use_batchnorm']
+
         extra = []
         for layer in layers:
             out_channels = layer[1]
 
             if layer[0] == 'c':
-                if self.params['use_batchnorm']:
-                    extra.append(nn.Conv2d(in_channels,
+                extra.append(nn.Conv2dReLU(in_channels,
                                            out_channels,
                                            *layer[2:],
-                                           bias=False))
-
-                    extra.append(nn.BatchNorm2d(out_channels))
-                else:
-                    extra.append(nn.Conv2d(in_channels,
-                                           out_channels,
-                                           *layer[2:]))
+                                           use_batchnorm=use_bn))
 
             elif layer[0] == 'i':
-                # inverted bottleneck block
-                if self.params['use_batchnorm']:
-                    extra.append(nn.Conv2d(in_channels,
-                                           in_channels,
-                                           *layer[2:],
-                                           groups=in_channels,
-                                           bias=False))
-
-                    extra.append(nn.BatchNorm2d(in_channels))
-
-                    extra.append(nn.Conv2d(in_channels,
-                                           out_channels,
-                                           1,
-                                           bias=False))
-
-                    extra.append(nn.BatchNorm2d(out_channels))
-
-                else:
-                    extra.append(nn.Conv2d(in_channels,
-                                           in_channels,
-                                           *layer[2:],
-                                           groups=in_channels))
-
-                    extra.append(nn.Conv2d(in_channels, out_channels, 1))
+                extra.append(nn.InvertedBottleneck(in_channels,
+                                                   out_channels,
+                                                   *layer[2:],
+                                                   use_batchnorm=use_bn))
+            else:
+                raise Exception("Extra layer config is broken")
 
             self.init_parameters(extra)
 
@@ -290,11 +267,19 @@ class SSD(nn.Module):
         for layer in layers:
             if isinstance(layer, nn.Conv2d):
                 nn.init.xavier_uniform_(layer.weight)
+            elif isinstance(layer, nn.Conv2dReLU):
+                SSD.init_parameters(layer.net)
+            elif isinstance(layer, nn.InvertedBottleneck):
+                SSD.init_parameters(layer.net)
 
     @staticmethod
     def calc_in_channel_width(prev):
         for i in range(-1, -3, -1):
             if isinstance(prev[i], nn.Conv2d):
+                return prev[i].out_channels
+            elif isinstance(prev[i], nn.Conv2dReLU):
+                return prev[i].out_channels
+            elif isinstance(prev[i], nn.InvertedBottleneck):
                 return prev[i].out_channels
             elif isinstance(prev[i], nn.BatchNorm2d):
                 return prev[i].num_features
