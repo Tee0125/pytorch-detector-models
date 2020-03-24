@@ -127,11 +127,11 @@ class MeanAp:
         w = max(x1 - x0, 0.)
         h = max(y1 - y0, 0.)
 
-        a = (truth[2] - truth[0]) * (truth[3] - truth[1])
-        b = (result[2] - result[0]) * (result[3] - result[1])
+        area_truth = (truth[2] - truth[0]) * (truth[3] - truth[1])
+        area_result = (result[2] - result[0]) * (result[3] - result[1])
 
         intersect = w * h
-        union = a + b - intersect
+        union = area_truth + area_result - intersect
 
         return intersect / union
 
