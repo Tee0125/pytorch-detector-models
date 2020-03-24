@@ -16,7 +16,7 @@ presets = {
     },
 
     'ssd300': {
-        'inherit': 'ssd300-bn-voc'
+        'inherit': 'ssd300-voc'
     },
 
     'ssdlite': {
