@@ -1,2 +1,2 @@
 from .detection_trainer import DetectionTrainer
-from .detection_validator import DetectionValidator
+from .detection_evaluator import DetectionEvaluator

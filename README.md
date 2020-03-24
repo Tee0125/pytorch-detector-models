@@ -80,12 +80,12 @@ Resume training
 python detect_train.py --resume checkpoints/ssdlite_latest.pth
 ```
 
-# Test
+# Evaluation
 
 calculate mAP with test image set
 
 ```
-python detect_test.py
+python detect_eval.py
 ```
 
 ## Command Arguments

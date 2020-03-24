@@ -11,7 +11,7 @@ from datasets import VOCDetection
 from transforms import detector_transforms as transforms
 
 
-class DetectionValidator:
+class DetectionEvaluator:
     def __init__(self, args, model):
         self.args = args
 

@@ -2,7 +2,7 @@ import argparse
 import torch
 
 from models import build_model, load_model
-from helpers import DetectionValidator
+from helpers import DetectionEvaluator
 
 def prepare_model(args):
     model = build_model(args, pretrained=False)
@@ -45,9 +45,8 @@ def main():
     model = prepare_model(args)
 
     # validate dataset & print result
-    validator = DetectionValidator(args, model)
-    validator()
-
+    evaluator = DetectionEvaluator(args, model)
+    evaluator()
 
 
 if __name__ == "__main__":
