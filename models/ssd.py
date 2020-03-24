@@ -75,8 +75,9 @@ class SSD(nn.Module):
         self.name = preset
 
         # to avoid PyCharm warning
+        self.l2_norm = None
+
         self.extras = None
-        self.l2_norms = None
         self.classifiers = None
         self.box_regressions = None
         self.in_channels = None
@@ -112,7 +113,7 @@ class SSD(nn.Module):
 
         # scale0
         x = self.b0(x)
-        pyramid.append(x)
+        pyramid.append(self.l2_norm(x))
 
         # scale1, ...
         x = self.b1(x)
@@ -127,8 +128,6 @@ class SSD(nn.Module):
         loc = []
 
         for i, x in enumerate(pyramid):
-            x = self.l2_norms[i](x)
-
             y = self.classifiers[i](x).permute(0, 2, 3, 1)
             conf.append(y.reshape(batch_size, -1, self.num_class))
 
@@ -185,8 +184,6 @@ class SSD(nn.Module):
         return nn.Sequential(*extra), out_channels
 
     def build_regressions(self):
-        l2_norms = []
-
         classifiers = []
         box_regressions = []
 
@@ -198,8 +195,6 @@ class SSD(nn.Module):
             in_channels = self.calc_in_channel_width(extra)
             n = self.default_box.get_num_ratios(i)
 
-            l2_norms.append(nn.Norm2d(in_channels))
-
             classifier = nn.Conv2d(in_channels, n * self.num_class, 3, 1, 1)
             classifiers.append(classifier)
 
@@ -209,7 +204,10 @@ class SSD(nn.Module):
         self.init_parameters(classifiers)
         self.init_parameters(box_regressions)
 
-        self.l2_norms = nn.ModuleList(l2_norms)
+        in_channels = self.calc_in_channel_width(self.b0)
+        l2_norm = nn.Norm2d(in_channels)
+
+        self.l2_norm = l2_norm
         self.classifiers = nn.ModuleList(classifiers)
         self.box_regressions = nn.ModuleList(box_regressions)
 
