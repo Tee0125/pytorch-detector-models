@@ -10,6 +10,7 @@ presets = {
         's_MIN': None,
         's_min': 0.2,
         's_max': 0.9,
+        's_extra': None,
 
         'use_batchnorm': False
     },
@@ -39,8 +40,7 @@ presets = {
         ),
         'num_grids': (38, 19, 10, 5, 3, 1),
 
-        's_min': 0.1,
-        's_max': 0.9
+        's_extra': 0.1,
     },
 
     'ssd300-bn-voc': {
@@ -95,7 +95,8 @@ class SSD(nn.Module):
         self.default_box = DefaultBox(p['num_grids'],
                                       p['ratios'],
                                       p['s_min'],
-                                      p['s_max'])
+                                      p['s_max'],
+                                      p['s_extra'])
 
         # setup backbone
         self.build_backbone(pretrained)
