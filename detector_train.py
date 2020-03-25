@@ -87,7 +87,7 @@ def main():
     parser.add_argument('--dataset', default='VOC',
                         choices=['VOC', 'VOC2007', 'VOC2012', 'COCO'],
                         type=str, help='VOC or COCO')
-    parser.add_argument('--dataset_root', default='../',
+    parser.add_argument('--dataset_root', default='downloads',
                         help='Dataset root directory path')
     parser.add_argument('--model', default='ssd300',
                         help='Detector model name')

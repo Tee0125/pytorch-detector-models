@@ -22,7 +22,7 @@ def main():
                         help='Detector model name')
     parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO'],
                         type=str, help='VOC or COCO')
-    parser.add_argument('--dataset_root', default='../',
+    parser.add_argument('--dataset_root', default='downloads',
                         help='Dataset root directory path')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
