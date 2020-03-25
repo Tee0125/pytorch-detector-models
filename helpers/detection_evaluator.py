@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from nn import DetectPostProcess
 from utils import MeanAp
 
-from datasets import VOCDetection
+from datasets import load_dataset
 from transforms import detector_transforms as transforms
 
 
@@ -78,14 +78,10 @@ class DetectionEvaluator:
                                 transforms.ToTensor(),
                                 transforms.Normalize()))
 
-        if args.dataset == 'VOC':
-            dataset = VOCDetection(root,
-                                   year='2007',
-                                   image_set='test',
-                                   download=True,
-                                   transforms=t)
-        else:
-            raise Exception("unknown dataset '%s'" % args.dataset)
+        dataset = load_dataset(args,
+                               image_set='test', 
+                               download=True, 
+                               transforms=t)
 
         return dataset
 

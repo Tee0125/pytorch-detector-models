@@ -84,7 +84,8 @@ class Callback(TrainerCallback):
 def main():
     parser = argparse.ArgumentParser(description='Detector Training')
 
-    parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO'],
+    parser.add_argument('--dataset', default='VOC',
+                        choices=['VOC', 'VOC2007', 'VOC2012', 'COCO'],
                         type=str, help='VOC or COCO')
     parser.add_argument('--dataset_root', default='../',
                         help='Dataset root directory path')

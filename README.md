@@ -58,7 +58,9 @@ in case of ssd300 model, 11GB GPU memory is required for batch_size 32 and 8GB G
 ## Available datasets
 | name                 | description |
 |:--------------------:|-------------|
-| VOC                  | VOC dataset |
+| VOC                  | VOC dataset (2007+2012) |
+| VOC2007              | VOC dataset (2007 only) |
+| VOC2012              | VOC dataset (2012 only) |
 
 ## Example
 

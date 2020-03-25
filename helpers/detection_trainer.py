@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import StepLR, MultiStepLR
 
 from torch.utils.data import DataLoader
 
-from datasets import VOCDetection
+from datasets import load_dataset
 from transforms import detector_transforms as transforms
 
 from models import build_model, load_model, save_model
@@ -110,14 +110,10 @@ class DetectionTrainer:
                                 transforms.ToTensor(),
                                 transforms.Normalize()))
 
-        if args.dataset == 'VOC':
-            dataset = VOCDetection(root,
-                                   year=('2007', '2012'),
-                                   image_set='trainval',
-                                   download=True,
-                                   transforms=t)
-        else:
-            raise Exception("unknown dataset '%s'" % args.dataset)
+        dataset = load_dataset(args, 
+                               image_set='trainval', 
+                               download=True, 
+                               transforms=t)
 
         return dataset
 
