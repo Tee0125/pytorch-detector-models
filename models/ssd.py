@@ -241,7 +241,7 @@ class SSD(nn.Module):
             b0 = nn.Sequential(features[0:14], features[14].conv[0])
             b1 = nn.Sequential(features[14].conv[1:], features[15:])
 
-            in_channels = features[14].conv[0].out_channels
+            in_channels = self.calc_in_channel_width(b0)
 
         else:
             raise Exception("unimplemented backbone %s" % backbone)
@@ -285,8 +285,12 @@ class SSD(nn.Module):
                 return prev[i].out_channels
             elif isinstance(prev[i], nn.BatchNorm2d):
                 return prev[i].num_features
+            elif isinstance(prev[i], nn.Sequential):
+                return SSD.calc_in_channel_width(prev[i])
+            elif isinstance(prev[i], models.mobilenet.InvertedResidual):
+                return SSD.calc_in_channel_width(prev[i].conv)
             elif isinstance(prev[i], models.mobilenet.ConvBNReLU):
-                return prev[i][1].num_features
+                return SSD.calc_in_channel_width(prev[i])
 
         raise Exception("failed to guess input channel width")
 
