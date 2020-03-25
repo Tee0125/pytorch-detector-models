@@ -31,6 +31,7 @@ python detect_train.py
 |---------------------|-------------|:-------:|
 | --model             | model name | ssd300 |
 | --dataset           | dataset name | VOC |
+| --dataset_root      | dataset location | downloads |
 | --batch_size        | size of mini-batch | 32 |
 | --lr                | learning rate for SGD | 0.001  |
 | --weight_decay      | weight decay for SGD | 0.0005 |
@@ -95,6 +96,7 @@ python detect_eval.py
 |---------------------|--------------|:-------:|
 | --model             | model name   | ssd300  |
 | --dataset           | dataset name | VOC     |
+| --dataset_root      | dataset location | downloads |
 | --weight            | weight file name | checkpoints/{MODEL_NAME}_latest.pth |
 
 # Single run
