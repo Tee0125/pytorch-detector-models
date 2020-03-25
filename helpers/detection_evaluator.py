@@ -73,10 +73,15 @@ class DetectionEvaluator:
         size = self.model.get_input_size()
         root = os.path.join(args.dataset_root, args.dataset)
 
-        t = transforms.Compose((transforms.LetterBox(),
-                                transforms.Resize(size),
-                                transforms.ToTensor(),
-                                transforms.Normalize()))
+        t = []
+        if not args.disable_letterbox:
+            t.append(transforms.LetterBox())
+
+        t.extend([transforms.Resize(size),
+                  transforms.ToTensor(),
+                  transforms.Normalize()])
+
+        t = transforms.Compose(t)
 
         dataset = load_dataset(args,
                                image_set='test', 

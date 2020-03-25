@@ -117,6 +117,12 @@ def main():
                         help='Use multi step lr scheduler')
     parser.add_argument('--milestones', default=[500, 650, 800], type=int, nargs='*',
                         help='Milestones for multi step lr scheduler')
+    parser.add_argument('--disable_augmentation', default=False, 
+                        action='store_true',
+                        help='Disable random augmentation')
+    parser.add_argument('--disable_letterbox', default=False, 
+                        action='store_true',
+                        help='Disable letterboxing image')
     args = parser.parse_args()
 
     t = DetectionTrainer(args, callback=Callback(args))
