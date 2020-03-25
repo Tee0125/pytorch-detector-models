@@ -109,11 +109,13 @@ class DefaultBox:
         if not has_batch:
             encoded = encoded.squeeze(0)
 
-        return encoded
+        return encoded / 0.1
 
     # (delta_x, delta_y, delta_w, delta_h) -> (x1, y1, x2, y2)
     def decode(self, encoded):
         has_batch = len(encoded.shape) == 3
+
+        encoded *= 0.1
 
         if not has_batch:
             encoded = encoded.unsqueeze(0)
