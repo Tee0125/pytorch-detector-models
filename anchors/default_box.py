@@ -3,7 +3,7 @@ import torch
 
 
 class DefaultBox:
-    def __init__(self, num_grids, ratios, s_min, s_max, s_extra=None):
+    def __init__(self, num_grids, ratios, s_min, s_max, s_extra_min=None):
         super().__init__()
 
         self.num_grids = num_grids
@@ -12,7 +12,7 @@ class DefaultBox:
         self.s_min = s_min
         self.s_max = s_max
 
-        self.s_extra = s_extra
+        self.s_extra_min = s_extra_min
 
         boxes = []
         num_ratios = []
@@ -57,19 +57,19 @@ class DefaultBox:
         s_min = self.s_min
         s_max = self.s_max
 
-        s_extra = self.s_extra
+        s_extra_min = self.s_extra_min
 
         num_grid = self.num_grids[i]
         grid_width = 1. / num_grid
 
         num_pyramid = len(ratios)
 
-        if s_extra:
+        if s_extra_min:
             num_pyramid -= 1
             i -= 1
 
         if i < 0:
-            s = s_extra
+            s = s_extra_min
         else:
             s = s_min + (s_max - s_min) * i / (num_pyramid-1)
 
