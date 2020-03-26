@@ -1,16 +1,17 @@
 
 PyTorch implementation of detector networks
 
-Trained SSD300 network achevied mAP 0.617 for VOC2007-test but it is much lower than number in the original paper
+# Quick Evaluation Results on VOC2007 test dataset
 
-Options used to train SSD300 is as in below:
+mAP in below is evaluated after training 150 epochs. (just quick training result on small epochs)
 
-* --lr 1e-3
-* --use_multi_step_lr
-* --milestones 600 800 1000
-* --epoches 1200
+| model      | augumentation | training set          | epochs | loss  | mAP    |
+|:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|
+| ssd300     | X             | VOC2007 trainval      | 200    | 0.081 | 0.430  |
+| ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |
+| ssd300     | O             | VOC2007/2012 trainval |        |       |        |
 
-In my experiences, adding augumentation improves mAP so now I am working on adding more augumentations...
+options used for quick training are `--epochs 150 --use_step_lr --step_size 100`.
 
 # Pre-requisite
 
@@ -20,7 +21,7 @@ pip install -r requirements
 
 # Train
 
-train with default parameter
+train with default parameter (dataset will be downloaded automatically)
 
 ```
 python detect_train.py
@@ -33,8 +34,8 @@ python detect_train.py
 | --dataset           | dataset name | VOC |
 | --dataset_root      | dataset location | downloads |
 | --batch_size        | size of mini-batch | 32 |
-| --lr                | learning rate for SGD | 0.001  |
-| --weight_decay      | weight decay for SGD | 0.0005 |
+| --lr                | learning rate for SGD | 1e-3  |
+| --weight_decay      | weight decay for SGD | 5e-4 |
 | --gamma             | gamma for lr scheduler | 0.1 |
 | --th_conf           | confidence threshold | 0.5 |
 | --th_iou            | iou threshold | 0.5 |
@@ -43,6 +44,8 @@ python detect_train.py
 | --step_size         | step_size for step lr scheduler | 30 |
 | --use_multi_step_lr | use multi step lr scheduler | False  |
 | --milestones        | milestones for multi step lr scheduler | [800, 1000, 1200] |
+| --disable_augmentation | disable random augmentation | False |
+| --disable_letterbox | disable letter boxing image | False |
 
 note: 
 in case of ssd300 model, 11GB GPU memory is required for batch_size 32 and 8GB GPU memory is required for batch_size 28
@@ -97,7 +100,8 @@ python detect_eval.py
 | --model             | model name   | ssd300  |
 | --dataset           | dataset name | VOC     |
 | --dataset_root      | dataset location | downloads |
-| --weight            | weight file name | checkpoints/{MODEL_NAME}_latest.pth |
+| --weight            | weight file name | `checkpoints/{MODEL_NAME}_latest.pth` |
+| --disable_letterbox | disable letter boxing image | False |
 
 # Single run
 
@@ -109,8 +113,9 @@ python detect_single.py image1 [image2] [image3] [...]
 | name                | description | default |
 |---------------------|-------------|:-------:|
 | --model             | model name | ssd300 |
-| --weight            | weight file name | checkpoints/{MODEL_NAME}_latest.pth |
+| --weight            | weight file name | `checkpoints/{MODEL_NAME}_latest.pth` |
 | --th_conf           | confidence threshold | 0.5 |
 | --th_iou            | iou threshold | 0.5 |
+| --disable_letterbox | disable letter boxing image | False |
 | --outfile           | save result to file | None |
 
