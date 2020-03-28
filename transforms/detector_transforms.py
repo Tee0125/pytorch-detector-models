@@ -2,8 +2,9 @@ import torch
 import random
 
 from PIL import Image, ImageOps
-from torchvision import transforms as T
 from torchvision.transforms import functional as F
+
+from utils.color import rgb2hsv, hsv2rgb
 
 
 class Compose(object):
@@ -71,16 +72,12 @@ class Resize:
         self.interpolation = interpolation
 
     def __call__(self, img, target):
-        width, height = img.size
-
         return img.resize(self.size, self.interpolation), target
 
 
 class HorizontalFlip:
     def __call__(self, img, target):
         img = ImageOps.mirror(img)
-
-        width, height = img.size
 
         for t in target:
             x1 = t[0]
@@ -167,7 +164,7 @@ class RandomApply:
 class RandomConvert:
     candidates = ('BGR', 'Grey')
 
-    def __init__(self, p=0.5):
+    def __init__(self, p=0.2):
         self.p = p
 
     def __call__(self, img, target):
@@ -263,6 +260,27 @@ class RandomCrop(CropStub):
         img_ = self.crop(img, offset, new_size)
         
         return img_, self.update_target(target, offset, img.size, new_size)
+
+
+class RandomDistort:
+    def __call__(self, img, target):
+        hsv = rgb2hsv(img)
+
+        # Random Hue
+        ratio = random.uniform(0.9, 1.1)
+        hsv[:, :, 0] *= ratio
+
+        # Random Saturation
+        ratio = random.uniform(0.8, 1.2)
+        hsv[:, :, 1] *= ratio
+
+        # Random exposure
+        ratio = random.uniform(0.8, 1.2)
+        hsv[:, :, 2] *= ratio
+
+        img = hsv2rgb(hsv)
+
+        return img, target
 
 
 class RandomSamplePatch(RandomCrop):

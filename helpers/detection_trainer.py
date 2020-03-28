@@ -99,20 +99,23 @@ class DetectionTrainer:
         args = self.args
 
         size = self.model.get_input_size()
-        root = os.path.join(args.dataset_root, args.dataset)
 
         t = []
         if not args.disable_augmentation:
             t.extend([transforms.RandomSamplePatch(),
-                      transforms.RandomScale(),
-                      transforms.RandomHorizontalFlip(),
-                      transforms.RandomConvert()])
+                      transforms.RandomScale()])
 
         if not args.disable_letterbox:
             t.append(transforms.LetterBox())
 
-        t.extend([transforms.Resize(size),
-                  transforms.ToTensor(),
+        t.append(transforms.Resize(size))
+
+        if not args.disable_augmentation:
+            t.extend([transforms.RandomHorizontalFlip(),
+                      transforms.RandomDistort(),
+                      transforms.RandomConvert()])
+
+        t.extend([transforms.ToTensor(),
                   transforms.Normalize()])
 
         t = transforms.Compose(t)
