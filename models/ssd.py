@@ -180,7 +180,10 @@ class SSD(nn.Module):
 
             in_channels = out_channels
 
-        return nn.Sequential(*extra), out_channels
+        extra = nn.Sequential(*extra)
+        extra.out_channels = out_channels
+
+        return extra, out_channels
 
     def build_regressions(self):
         classifiers = []
@@ -219,19 +222,18 @@ class SSD(nn.Module):
 
                 b0 = model.features[0:33]
                 b1 = model.features[33:-1]
-
-                in_channels = model.features[30].out_channels
             else:
                 model = models.vgg16(pretrained=pretrained)
 
                 b0 = model.features[0:23]
                 b1 = model.features[23:-1]
 
-                in_channels = model.features[21].out_channels
-
             for layer in model.features:
                 if isinstance(layer, nn.MaxPool2d):
                     layer.ceil_mode = True
+
+            b0.out_channels = 512
+            b1.out_channels = 512
 
         elif backbone == "mobilenet_v2":
             model = models.mobilenet_v2(pretrained=pretrained)
@@ -240,10 +242,13 @@ class SSD(nn.Module):
             b0 = nn.Sequential(features[0:14], features[14].conv[0])
             b1 = nn.Sequential(features[14].conv[1:], features[15:])
 
-            in_channels = self.calc_in_channel_width(b0)
+            b0.out_channels = 576
+            b1.out_channels = 1280
 
         else:
             raise Exception("unimplemented backbone %s" % backbone)
+
+        in_channels = self.calc_in_channel_width(b0)
 
         self.b0 = b0
         self.b1 = b1
@@ -275,23 +280,10 @@ class SSD(nn.Module):
 
     @staticmethod
     def calc_in_channel_width(prev):
-        for i in range(-1, -3, -1):
-            if isinstance(prev[i], nn.Conv2d):
-                return prev[i].out_channels
-            elif isinstance(prev[i], nn.Conv2dReLU):
-                return prev[i].out_channels
-            elif isinstance(prev[i], nn.InvertedBottleneck):
-                return prev[i].out_channels
-            elif isinstance(prev[i], nn.BatchNorm2d):
-                return prev[i].num_features
-            elif isinstance(prev[i], nn.Sequential):
-                return SSD.calc_in_channel_width(prev[i])
-            elif isinstance(prev[i], models.mobilenet.InvertedResidual):
-                return SSD.calc_in_channel_width(prev[i].conv)
-            elif isinstance(prev[i], models.mobilenet.ConvBNReLU):
-                return SSD.calc_in_channel_width(prev[i])
+        if not hasattr(prev, 'out_channels'):
+            raise Exception("failed to guess input channel width")
 
-        raise Exception("failed to guess input channel width")
+        return prev.out_channels
 
 
 def build_ssd(preset='ssd300', params=None, pretrained=False):
