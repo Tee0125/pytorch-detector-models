@@ -5,21 +5,27 @@ from torchvision.ops import nms
 
 
 class DetectPostProcess(nn.Module):
-    def __init__(self, anchor):
+    def __init__(self, anchor, th_conf=0.5, th_iou=0.5):
         super().__init__()
 
         self.anchor = anchor
+
+        self.th_conf = th_conf
+        self.th_iou = th_iou
+
         self.softmax = nn.Softmax(dim=2)
 
-    def forward(self, conf, loc, th_iou=0.5, th_conf=0.5):
+    def forward(self, conf, loc):
         num_cls = conf.size(2)
 
         score = self.softmax(conf)
 
-        return self.nms(self.anchor, num_cls, score, loc, th_conf, th_iou)
+        return self.nms(self.anchor, num_cls, score, loc)
 
-    @staticmethod
-    def nms(anchor, num_cls, score, loc, th_conf, th_iou):
+    def nms(self, anchor, num_cls, score, loc):
+        th_conf = self.th_conf
+        th_iou = self.th_iou
+
         batch_size = score.size(0)
 
         box = anchor.decode(loc)
@@ -35,18 +41,9 @@ class DetectPostProcess(nn.Module):
                 _score = score[b][mask, i]
 
                 idx = nms(_box, _score, th_iou)
+                objs = torch.cat((_box[idx], _score[idx].unsqueeze(1)), 1)
 
-                _l = _box[idx].tolist()
-                _s = _score[idx].tolist()
-
-                objs = []
-                for j in range(len(_l)):
-                    obj = [_l[j][k] for k in range(4)]
-                    obj.append(_s[j])
-
-                    objs.append(obj)
-
-                classes.append(objs)
+                classes.append(objs.tolist())
 
             batches.append(classes)
 

@@ -16,7 +16,9 @@ class DetectionEvaluator:
         self.args = args
 
         self.model = model
-        self.post_process = DetectPostProcess(model.get_anchor_box())
+        self.post_process = DetectPostProcess(model.get_anchor_box(),
+                                              args.th_conf,
+                                              args.th_iou)
 
         self.dataset = self.init_dataset()
         self.dataloader = self.init_dataloader()
@@ -26,9 +28,6 @@ class DetectionEvaluator:
 
     def __call__(self):
         args = self.args
-
-        th_conf = args.th_conf
-        th_iou = args.th_iou
 
         self.model.eval()
         self.mAP.reset()
@@ -45,7 +44,7 @@ class DetectionEvaluator:
 
             with torch.no_grad():
                 conf, loc = self.model.forward(x)
-                y_ = self.post_process(conf, loc, th_iou, th_conf)
+                y_ = self.post_process(conf, loc)
 
             self.match(y_, y)
 

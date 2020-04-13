@@ -30,7 +30,9 @@ def prepare_input(img, size):
 def prepare_model(args, weight):
     # build model
     model = build_model(args, pretrained=False)
-    post_process = DetectPostProcess(model.get_anchor_box())
+    post_process = DetectPostProcess(model.get_anchor_box(),
+                                     args.th_conf,
+                                     args.th_iou)
 
     # load weight
     load_model(model, weight)
@@ -98,10 +100,10 @@ def main():
                         type=str, help='VOC or COCO')
     parser.add_argument('--weight', default=None,
                         help='Weight file path')
-    parser.add_argument('--th_iou', default=0.5, type=float,
-                        help='IOU Threshold')
     parser.add_argument('--th_conf', default=0.5, type=float,
                         help='Confidence Threshold')
+    parser.add_argument('--th_iou', default=0.5, type=float,
+                        help='IOU Threshold')
     args = parser.parse_args()
 
     # dataset
@@ -119,7 +121,7 @@ def main():
     model, post_process = prepare_model(args, weight)
 
     for x in args.inputs:
-        single_run(model, post_process, x, dataset, args.th_iou, args.th_conf)
+        single_run(model, post_process, x, dataset)
 
 
 if __name__ == "__main__":
