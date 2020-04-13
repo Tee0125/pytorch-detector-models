@@ -120,9 +120,9 @@ def main():
     parser.add_argument('--disable_augmentation', default=False, 
                         action='store_true',
                         help='Disable random augmentation')
-    parser.add_argument('--disable_letterbox', default=False, 
+    parser.add_argument('--enable_letterbox', default=False, 
                         action='store_true',
-                        help='Disable letterboxing image')
+                        help='Enable letterboxing image')
     args = parser.parse_args()
 
     t = DetectionTrainer(args, callback=Callback(args))

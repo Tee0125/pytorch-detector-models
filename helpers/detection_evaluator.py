@@ -73,7 +73,7 @@ class DetectionEvaluator:
         root = os.path.join(args.dataset_root, args.dataset)
 
         t = []
-        if not args.disable_letterbox:
+        if args.enable_letterbox:
             t.append(transforms.LetterBox())
 
         t.extend([transforms.Resize(size),

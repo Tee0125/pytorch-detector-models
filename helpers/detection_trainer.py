@@ -104,7 +104,7 @@ class DetectionTrainer:
         if not args.disable_augmentation:
             t.extend([transforms.RandomExpand(),
                       transforms.RandomSamplePatch()])
-        elif not args.disable_letterbox:
+        elif args.enable_letterbox:
             t.append(transforms.LetterBox())
 
         t.append(transforms.Resize(size))

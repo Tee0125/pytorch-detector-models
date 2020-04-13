@@ -45,7 +45,7 @@ python detect_train.py
 | --use_multi_step_lr | use multi step lr scheduler | False  |
 | --milestones        | milestones for multi step lr scheduler | [800, 1000, 1200] |
 | --disable_augmentation | disable random augmentation | False |
-| --disable_letterbox | disable letter boxing image | False |
+| --enable_letterbox  | enable letter boxing image | False |
 
 note: 
 in case of ssd300 model, 11GB GPU memory is required for batch_size 32 and 8GB GPU memory is required for batch_size 28
@@ -101,7 +101,7 @@ python detect_eval.py
 | --dataset           | dataset name | VOC     |
 | --dataset_root      | dataset location | downloads |
 | --weight            | weight file name | `checkpoints/{MODEL_NAME}_latest.pth` |
-| --disable_letterbox | disable letter boxing image | False |
+| --enable_letterbox  | enable letter boxing image | False |
 
 # Single run
 
@@ -116,6 +116,6 @@ python detect_single.py image1 [image2] [image3] [...]
 | --weight            | weight file name | `checkpoints/{MODEL_NAME}_latest.pth` |
 | --th_conf           | confidence threshold | 0.5 |
 | --th_iou            | iou threshold | 0.5 |
-| --disable_letterbox | disable letter boxing image | False |
+| --enable_letterbox  | enable letter boxing image | False |
 | --outfile           | save result to file | None |
 

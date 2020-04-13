@@ -13,9 +13,16 @@ def read_image(source):
     return Image.open(source)
 
 
-def prepare_input(img, size):
-    t = transforms.Compose((transforms.LetterBox(),
-                            transforms.Resize(size)))
+def prepare_input(img, size, enable_letterbox):
+
+    t = []
+
+    if enable_letterbox:
+        t.append(transforms.LetterBox())
+
+    t.append(transforms.Resize(size))
+
+    t = transforms.Compose(t)
 
     img, _ = t(img, [])
 
@@ -44,11 +51,11 @@ def prepare_model(args, weight):
     return model, post_process
 
 
-def inference(model, post_process, img, th_iou, th_conf):
+def inference(model, post_process, img, th_iou, th_conf, enable_letterbox):
     size = model.get_input_size()
 
     # prepare input
-    img, x = prepare_input(img, size)
+    img, x = prepare_input(img, size, enable_letterbox)
 
     # inference -> postprocess(softmax->nms->...)
     if torch.cuda.is_available():
@@ -59,7 +66,9 @@ def inference(model, post_process, img, th_iou, th_conf):
     return img, post_process(conf, loc, th_iou, th_conf)
 
 
-def single_run(model, post_process, x, dataset, th_iou, th_conf):
+def single_run(model, post_process, x, dataset, 
+               th_iou, th_conf, enable_letterbox):
+
     # change to evaluation mode
     model.eval()
 
@@ -71,7 +80,8 @@ def single_run(model, post_process, x, dataset, th_iou, th_conf):
                                  post_process, 
                                  img, 
                                  th_iou, 
-                                 th_conf)
+                                 th_conf,
+                                 enable_letterbox)
     
     # print results
     objs = []
@@ -104,6 +114,9 @@ def main():
                         help='Confidence Threshold')
     parser.add_argument('--th_iou', default=0.5, type=float,
                         help='IOU Threshold')
+    parser.add_argument('--enable_letterbox', default=False, 
+                        action='store_true',
+                        help='Enable letterboxing image')
     args = parser.parse_args()
 
     # dataset

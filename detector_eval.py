@@ -34,9 +34,9 @@ def main():
                         help='IOU Threshold')
     parser.add_argument('--th_conf', default=0.05, type=float,
                         help='Confidence Threshold')
-    parser.add_argument('--disable_letterbox', default=False, 
+    parser.add_argument('--enable_letterbox', default=False, 
                         action='store_true',
-                        help='Disable letterboxing image')
+                        help='Enable letterboxing image')
     args = parser.parse_args()
 
 
