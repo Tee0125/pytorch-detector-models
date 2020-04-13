@@ -4,7 +4,7 @@ import random
 from PIL import Image, ImageOps
 from torchvision.transforms import functional as F
 
-from utils.color import rgb2hsv, hsv2rgb
+from utils.color import *
 
 
 class Compose(object):
@@ -32,16 +32,8 @@ class ToTensor:
         return F.to_tensor(img), torch.tensor(target)
 
 
-class Convert:
-    def __init__(self, mode="RGB"):
-        self.mode = mode
-
-    def __call__(self, img, target):
-        return img.convert(mode=self.mode), target
-
-
 class LetterBox:
-    def __init__(self, fill=(255, 255, 255)):
+    def __init__(self, fill=(123, 116, 103)):
         self.fill = fill
 
     def __call__(self, img, target):
@@ -75,8 +67,85 @@ class Resize:
         return img.resize(self.size, self.interpolation), target
 
 
-class HorizontalFlip:
+class CropStub:
+    @staticmethod
+    def crop(img, offset, size):
+        x1 = offset[0]
+        x2 = offset[0] + size[0]
+        y1 = offset[1]
+        y2 = offset[1] + size[1]
+
+        return img.crop((x1, y1, x2, y2))
+
+    @staticmethod
+    def generate_target(target, offset, org_size, new_size):
+        x_offset, y_offset = offset
+
+        width, height = org_size
+        width_, height_ = new_size
+
+        new_target = []
+
+        for t in target:
+            cx = (t[0] + t[2]) / 2. * width - x_offset
+            cy = (t[1] + t[3]) / 2. * height - y_offset
+
+            if cx < 0 or cx > width_ or cy < 0 or cy > height_:
+                continue
+
+            x1 = max(t[0] * width - x_offset, 0)
+            y1 = max(t[1] * height - y_offset, 0)
+            x2 = min(t[2] * width - x_offset, width_)
+            y2 = min(t[3] * height - y_offset, height_)
+
+            cls = t[4]
+
+            new_target.append([x1 / width_,
+                               y1 / height_,
+                               x2 / width_,
+                               y2 / height_,
+                               cls])
+
+        return new_target
+
+
+class RandomColorSpace:
+    candidates = ('BGR', 'BRG', 'RGB', 'RBG', 'GBR', 'GRB')
+
+    def __init__(self, p=0.5):
+        self.p = p
+
     def __call__(self, img, target):
+        if random.random() > self.p:
+            return img, target
+
+        mode = random.choice(self.candidates)
+
+        r, g, b = img.split()
+        if mode == 'BGR':
+            return Image.merge("RGB", (b, g, r)), target
+        elif mode == 'BRG':
+            return Image.merge("RGB", (b, r, g)), target
+        elif mode == 'RBG':
+            return Image.merge("RGB", (r, b, g)), target
+        elif mode == 'RGB':
+            return Image.merge("RGB", (r, g, b)), target
+        elif mode == 'GBR':
+            return Image.merge("RGB", (g, b, r)), target
+        elif mode == 'GRB':
+            return Image.merge("RGB", (g, r, b)), target
+        else:
+            raise Exception("unknown mode")
+
+
+class RandomHorizontalFlip:
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, img, target):
+        if random.random() > self.p:
+            return img, target
+
         img = ImageOps.mirror(img)
 
         for t in target:
@@ -89,247 +158,163 @@ class HorizontalFlip:
         return img, target
 
 
-class CropStub:
-    def crop(self, img, offset, size):
-        x1 = offset[0]
-        x2 = offset[0] + size[0]
-        y1 = offset[1]
-        y2 = offset[1] + size[1]
-
-        return img.crop((x1, y1, x2, y2))
-
-    def update_target(self, target, offset, org_size, new_size):
-        x_offset, y_offset = offset
-
-        width, height = org_size
-        width_, height_ = new_size
-
-        discarded = []
-        for t in target:
-            x1 = max(t[0] * width - x_offset, 0)
-            x2 = min(t[2] * width - x_offset, width_)
-
-            if (x2 - x1) <= 4:
-                discarded.append(t)
-                continue
-
-            y1 = max(t[1] * height - y_offset, 0)
-            y2 = min(t[3] * height - y_offset, height_)
-
-            if (y2 - y1) <= 4:
-                discarded.append(t)
-                continue
-
-            t[0] = x1 / width_
-            t[1] = y1 / height_
-            t[2] = x2 / width_
-            t[3] = y2 / height_
-
-        for t in discarded:
-            target.remove(t)
-
-        return target
-
-
-class CenterCrop(CropStub):
-    def __init__(self, size):
-        self.size = size
-
-    def __call__(self, img, target):
-        org_size = img.size
-        new_size = self.size
-
-        x_offset = (org_size[0] - new_size[0]) / 2
-        y_offset = (org_size[1] - new_size[1]) / 2
-
-        offset = (x_offset, y_offset)
-        
-        img_ = self.crop(img, offset, new_size)
-
-        return img_, self.update_target(target, offset, org_size, new_size)
-        
-
-class RandomApply:
-    def __init__(self, t, p=0.5):
-        self.t = t
-        self.p = p
-
-    def __call__(self, img, target):
-        if random.random() < self.p:
-            return self.t(img, target)
-
-        return img, target
-
-
-class RandomConvert:
-    candidates = ('BGR', 'Grey')
-
-    def __init__(self, p=0.2):
-        self.p = p
-
-    def __call__(self, img, target):
-        if random.random() < self.p:
-            mode = random.choice(self.candidates)
-
-            if mode == 'BGR':
-                b, g, r = img.split()
-                img = Image.merge("RGB", (r, g, b))
-            elif mode == 'Grey':
-                img = img.convert(mode='L').convert(mode='RGB')
-            else:
-                img = img.convert(mode=mode)
-
-        return img, target
-
-
-class RandomHorizontalFlip(HorizontalFlip):
-    def __init__(self, p=0.5):
-        super().__init__()
-
-        self.p = p
-
-    def __call__(self, img, target):
-        if random.random() < self.p:
-            return super().__call__(img, target)
-
-        return img, target
-
-
-class RandomLetterBox(LetterBox):
-    def __init__(self, p=0.5, fill=(255, 255, 255)):
-        super().__init__(fill)
-
-        self.p = p
-
-    def __call__(self, img, target):
-        if random.random() < self.p:
-            return super().__call__(img, target)
-
-        return img, target
-
-
-class RandomScale:
-    def __init__(self, p=0.5, ratio=(1.0, 2.0), interpolation=Image.LANCZOS):
-        self.interpolation = interpolation
-
-        self.p = p
-        self.ratio = ratio
-
-    def __call__(self, img, target):
-        if random.random() < self.p:
-            return img, target
-
-        ratio = random.uniform(self.ratio[0], self.ratio[1])
-
-        if random.random() < 0.5:
-            width = img.size[0]
-            height = int(img.size[1] * ratio)
-        else:
-            width = int(img.size[0] * ratio)
-            height = img.size[1]
-
-        return img.resize((width, height), self.interpolation), target
-
-
-class RandomCrop(CropStub):
-    def __call__(self, img, target):
-        width, height = img.size
-
-        x_min = y_min = 1.0
-        x_max = y_max = 0.0
-
-        for t in target:
-            x_min = min(x_min, t[0])
-            y_min = min(y_min, t[1])
-            x_max = max(x_max, t[2])
-            y_max = max(y_max, t[3])
-
-        x_min = int(x_min * width)
-        y_min = int(y_min * height)
-        x_max = int(x_max * width)
-        y_max = int(y_max * height)
-
-        l = random.randint(0, x_min)
-        r = random.randint(0, width - x_max)
-        t = random.randint(0, y_min)
-        b = random.randint(0, height - y_max)
-
-        offset = (l, t)
-        new_size = (width - l - r, height - t - b)
-
-        img_ = self.crop(img, offset, new_size)
-        
-        return img_, self.update_target(target, offset, img.size, new_size)
-
-
 class RandomDistort:
+    def __init__(self, p=0.5):
+        self.p = p
+
     def __call__(self, img, target):
-        hsv = rgb2hsv(img)
+        hsv = rgb2hsv(img2arr(img))
 
         # Random Hue
-        ratio = random.uniform(0.9, 1.1)
-        hsv[:, :, 0] *= ratio
+        if random.random() < self.p:
+            delta = random.uniform(-0.1, 0.1)
+            hsv[:, :, 0] += delta
+            hsv[:, :, 0] %= 1.
 
         # Random Saturation
-        ratio = random.uniform(0.8, 1.2)
-        hsv[:, :, 1] *= ratio
+        if random.random() < self.p:
+            ratio = random.uniform(0.5, 1.5)
+            hsv[:, :, 1] *= ratio
+            hsv[:, :, 1] = hsv[:, :, 1].clip(0., 1.)
 
         # Random exposure
-        ratio = random.uniform(0.8, 1.2)
-        hsv[:, :, 2] *= ratio
+        if random.random() < self.p:
+            ratio = random.uniform(0.5, 1.5)
+            hsv[:, :, 2] *= ratio
+            hsv[:, :, 2] = hsv[:, :, 2].clip(0., 255.)
 
-        img = hsv2rgb(hsv)
+        rgb = hsv2rgb(hsv)
+
+        # Random Contrast
+        if random.random() < self.p:
+            diff = random.uniform(-25.5, 25.5)
+            rgb += diff
+            rgb = rgb.clip(0., 255.)
+
+        img = arr2img(rgb)
 
         return img, target
 
 
-class RandomSamplePatch(RandomCrop):
-    def __init__(self, p=0.7):
+class RandomExpand:
+    def __init__(self, p=0.5, ratio=(1.0, 4.0), fill=(123, 116, 103)):
         self.p = p
+
+        self.ratio = ratio
+        self.fill = fill
 
     def __call__(self, img, target):
         if random.random() > self.p:
             return img, target
 
+        scale = random.uniform(self.ratio[0], self.ratio[1])
+
+        width, height = img.size
+        width_ = int(width * scale)
+        height_ = int(height * scale)
+
+        pad_l = random.randint(0, width_ - width)
+        pad_t = random.randint(0, height_ - height)
+        pad_r = width_ - width - pad_l
+        pad_b = height_ - height - pad_t
+
+        for t in target:
+            t[0] = (t[0] * width + pad_l) / width_
+            t[1] = (t[1] * height + pad_t) / height_
+            t[2] = (t[2] * width + pad_l) / width_
+            t[3] = (t[3] * height + pad_t) / height_
+
+        pad = (pad_l, pad_t, pad_r, pad_b)
+        img = ImageOps.expand(img, pad, fill=self.fill)
+
+        return img, target
+
+
+class RandomSamplePatch(CropStub):
+    def __call__(self, img, target):
         width, height = img.size
 
-        t = random.choice(target)
-        ratio = random.choice((0.1, 0.3, 0.5, 0.7, 0.9))
+        for trial in range(7):
+            target_iou = random.choice((0.0, 0.1, 0.3, 0.7, 0.9, 1.0))
 
-        x1 = int(t[0] * width)
-        y1 = int(t[1] * height)
-        x2 = int(t[2] * width)
-        y2 = int(t[3] * height)
+            if target_iou == 1.0:
+                return img, target
 
-        w = x2 - x1
-        h = y2 - y1
+            for _ in range(400):
+                new_width = random.uniform(0.3, 1.0)
+                new_height = random.uniform(0.3, 1.0)
 
-        x_pad = int(w / ratio)
-        y_pad = int(h / ratio)
+                ratio = (new_width * width) / (new_height * height)
+                if not 0.5 < ratio < 2.:
+                    continue
 
-        l_pad = random.randint(0, x_pad)
-        r_pad = x_pad - l_pad
-        t_pad = random.randint(0, y_pad)
-        b_pad = y_pad - t_pad
+                rect = [random.uniform(0., 1. - new_width),
+                        random.uniform(0., 1. - new_height),
+                        0.,
+                        0.]
 
-        _x1 = max(x1 - l_pad, 0)
-        _y1 = max(y1 - t_pad, 0)
-        _x2 = min(x2 + r_pad, width)
-        _y2 = min(y2 + b_pad, height)
+                rect[2] = rect[0] + new_width
+                rect[3] = rect[1] + new_height
 
-        offset = (_x1, _y1)
-        new_size = (_x2 - _x1, _y2 - _y1)
+                if target_iou != 0.0:
+                    min_iou = self.calc_min_iou(target, rect)
 
-        img_ = self.crop(img, offset, new_size)
+                    if not target_iou < min_iou < (target_iou + 0.2):
+                        continue
 
-        return img_, self.update_target(target, offset, img.size, new_size)
+                # update target ground truths
+                offset = (int(rect[0] * img.size[0]),
+                          int(rect[1] * img.size[1]))
+
+                new_size = (int((rect[2] - rect[0]) * img.size[0]),
+                            int((rect[3] - rect[1]) * img.size[1]))
+
+                target_ = self.generate_target(target,
+                                               offset,
+                                               img.size,
+                                               new_size)
+
+                # try again if no ground truth object is left in image
+                if not target_:
+                    continue
+
+                return self.crop(img, offset, new_size), target_
+
+        return img, target
+
+    @staticmethod
+    def calc_min_iou(target, rect):
+        crop_x1, crop_y1, crop_x2, crop_y2 = rect
+        min_iou = 1.0
+
+        for x1, y1, x2, y2, _ in target:
+            x1_ = max(x1, crop_x1)
+            y1_ = max(y1, crop_y1)
+            x2_ = min(x2, crop_x2)
+            y2_ = min(y2, crop_y2)
+
+            if x2_ <= x1_ or y2_ <= y1_:
+                continue
+
+            w = max((min(x2, x2_) - max(x1, x1_)), 0.)
+            h = max((min(y2, y2_) - max(y1, y1_)), 0.)
+
+            intersect = w * h
+            union = (x2 - x1)*(y2 - y1) + (x2_ - x1_)*(y2_ - y1_) - intersect
+
+            iou = intersect / union
+
+            if 0. < iou < min_iou:
+                min_iou = iou
+
+        return min_iou
 
 
 class Normalize:
-    def __init__(self, mean=.5, std=.5):
+    def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         self.mean = mean
         self.std = std
 
     def __call__(self, img, target):
-        return (img - self.mean) / self.std, target
+        return F.normalize(img, self.mean, self.std), target
 

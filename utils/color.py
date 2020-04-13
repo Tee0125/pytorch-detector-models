@@ -2,9 +2,16 @@ from PIL import Image
 import numpy as np
 
 
+def img2arr(img):
+    return np.array(img, dtype=np.float)
+
+
+def arr2img(arr):
+    return Image.fromarray(np.uint8(arr))
+
+
 # original code from scikit-image
-def rgb2hsv(img):
-    rgb = np.array(img, dtype=np.float)
+def rgb2hsv(rgb):
     hsv = np.empty_like(rgb)
 
     # to avoid divide by zero
@@ -45,6 +52,7 @@ def rgb2hsv(img):
 
     return hsv
 
+
 def hsv2rgb(hsv):
     hi = np.floor(hsv[:, :, 0] * 6)
 
@@ -62,4 +70,4 @@ def hsv2rgb(hsv):
                          np.dstack((t, p, v)),
                          np.dstack((v, p, q))])
 
-    return Image.fromarray(np.uint8(rgb.clip(0., 255.)))
+    return rgb

@@ -102,10 +102,9 @@ class DetectionTrainer:
 
         t = []
         if not args.disable_augmentation:
-            t.extend([transforms.RandomSamplePatch(),
-                      transforms.RandomScale()])
-
-        if not args.disable_letterbox:
+            t.extend([transforms.RandomExpand(),
+                      transforms.RandomSamplePatch()])
+        elif not args.disable_letterbox:
             t.append(transforms.LetterBox())
 
         t.append(transforms.Resize(size))
@@ -113,7 +112,7 @@ class DetectionTrainer:
         if not args.disable_augmentation:
             t.extend([transforms.RandomHorizontalFlip(),
                       transforms.RandomDistort(),
-                      transforms.RandomConvert()])
+                      transforms.RandomColorSpace()])
 
         t.extend([transforms.ToTensor(),
                   transforms.Normalize()])
