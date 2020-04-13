@@ -9,9 +9,9 @@ mAP in below is evaluated after training 150 epochs. (just quick training result
 |:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|
 | ssd300     | X             | VOC2007 trainval      | 200    | 0.081 | 0.430  |
 | ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |
-| ssd300     | O             | VOC2007/2012 trainval |        |       |        |
+| ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  |
 
-options used for quick training are `--epochs 150 --use_step_lr --step_size 100`.
+options used for quick training are `--epochs 200 --use_multi_step_lr --milestones 140 170`
 
 # Pre-requisite
 
