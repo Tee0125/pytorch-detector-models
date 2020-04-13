@@ -13,10 +13,13 @@ class VOCDetection:
                  year='2007',
                  image_set='train',
                  download=False,
-                 transforms=None):
+                 transforms=None,
+                 ignore_difficult=True):
 
         self.datasets = []
         self.cnt_per_dataset = []
+
+        self.ignore_difficult = ignore_difficult
 
         if not isinstance(year, list) and not isinstance(year, tuple):
             year = ( year, )
@@ -55,6 +58,9 @@ class VOCDetection:
 
         target = []
         for obj in objs:
+            if self.ignore_difficult and int(obj['difficult']):
+                continue
+
             label = self.encode_class(obj['name'])
 
             x1 = float(obj['bndbox']['xmin']) / w
