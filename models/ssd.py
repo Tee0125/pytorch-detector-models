@@ -107,6 +107,9 @@ class SSD(nn.Module):
         # build regression layers
         self.build_regressions()
 
+        # initialize weight/bias
+        self.initialize_parameters()
+
     def forward(self, x):
         pyramid = []
 
@@ -176,8 +179,6 @@ class SSD(nn.Module):
             else:
                 raise Exception("Extra layer config is broken")
 
-            self.init_parameters(extra)
-
             in_channels = out_channels
 
         extra = nn.Sequential(*extra)
@@ -202,9 +203,6 @@ class SSD(nn.Module):
 
             box_regression = nn.Conv2d(in_channels, n * 4, 3, 1, 1)
             box_regressions.append(box_regression)
-
-        self.init_parameters(classifiers)
-        self.init_parameters(box_regressions)
 
         in_channels = self.calc_in_channel_width(self.b0)
         l2_norm = nn.Norm2d(in_channels)
@@ -255,6 +253,11 @@ class SSD(nn.Module):
 
         self.in_channels = in_channels
 
+    def initialize_parameters(self):
+        self.init_parameters(self.extras)
+        self.init_parameters(self.classifiers)
+        self.init_parameters(self.box_regressions)
+
     def apply_params(self, params):
         if params is None:
             return
@@ -269,14 +272,12 @@ class SSD(nn.Module):
             self.params[k] = v
 
     @staticmethod
-    def init_parameters(layers):
-        for layer in layers:
-            if isinstance(layer, nn.Conv2d):
-                nn.init.xavier_uniform_(layer.weight)
-            elif isinstance(layer, nn.Conv2dReLU):
-                SSD.init_parameters(layer.net)
-            elif isinstance(layer, nn.InvertedBottleneck):
-                SSD.init_parameters(layer.net)
+    def init_parameters(layer):
+        for module in layer.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
 
     @staticmethod
     def calc_in_channel_width(prev):
