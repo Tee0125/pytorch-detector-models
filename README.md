@@ -1,9 +1,10 @@
 
-PyTorch implementation of detector networks
+PyTorch implementation of:
 
-# Quick Evaluation Results on VOC2007 test dataset
+* [SSD](https://arxiv.org/abs/1512.02325)
+* [SSDlite](https://arxiv.org/abs/1801.04381) (SSD variant with MobileNet v2)
 
-mAP in below is evaluated after training 200 epochs. (just quick training result on small epochs)
+# Evaluation Results on VOC2007 test dataset
 
 | model      | augumentation | training set          | epochs | loss  | mAP    |
 |:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|
@@ -12,7 +13,7 @@ mAP in below is evaluated after training 200 epochs. (just quick training result
 | ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  |
 | ssdlite    | O             | VOC2007/2012 trainval | 200    | 2.286 | 0.691  |
 
-options used for quick training are `--epochs 200 --use_multi_step_lr --milestones 140 170`
+option used for training is `--use_multi_step_lr`
 
 # Pre-requisite
 
