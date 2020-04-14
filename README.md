@@ -35,6 +35,7 @@ python detect_train.py
 | --model             | model name | ssd300 |
 | --dataset           | dataset name | VOC |
 | --dataset_root      | dataset location | downloads |
+| --epochs            | number of epochs to run | 200 |
 | --batch_size        | size of mini-batch | 32 |
 | --lr                | learning rate for SGD | 1e-3  |
 | --weight_decay      | weight decay for SGD | 5e-4 |
@@ -45,7 +46,7 @@ python detect_train.py
 | --use_step_lr       | use step lr scheduler | False  |
 | --step_size         | step_size for step lr scheduler | 30 |
 | --use_multi_step_lr | use multi step lr scheduler | False  |
-| --milestones        | milestones for multi step lr scheduler | [800, 1000, 1200] |
+| --milestones        | milestones for multi step lr scheduler | 140 170 |
 | --disable_augmentation | disable random augmentation | False |
 | --enable_letterbox  | enable letter boxing image | False |
 
@@ -79,7 +80,7 @@ python detect_train.py --use_multi_step_lr
 Training SSD-Lite with multi step lr and batch_size 25 (SSD-Lite model is not tested yet)
 
 ```
-python detect_train.py --model ssdlite --use_multi_step_lr --milestones 500 600 700 --batch_size 25
+python detect_train.py --model ssdlite --use_multi_step_lr --milestones 140 160 --batch_size 25
 ```
 
 Resume training
