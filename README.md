@@ -3,13 +3,14 @@ PyTorch implementation of detector networks
 
 # Quick Evaluation Results on VOC2007 test dataset
 
-mAP in below is evaluated after training 150 epochs. (just quick training result on small epochs)
+mAP in below is evaluated after training 200 epochs. (just quick training result on small epochs)
 
 | model      | augumentation | training set          | epochs | loss  | mAP    |
 |:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|
 | ssd300     | X             | VOC2007 trainval      | 200    | 0.081 | 0.430  |
 | ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |
 | ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  |
+| ssdlite    | O             | VOC2007/2012 trainval | 200    | 2.286 | 0.691  |
 
 options used for quick training are `--epochs 200 --use_multi_step_lr --milestones 140 170`
 
