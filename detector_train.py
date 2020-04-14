@@ -97,7 +97,7 @@ def main():
                         help='Checkpoint state_dict file to resume training from')
     parser.add_argument('--num_workers', default=-1, type=int,
                         help='Number of workers used in dataloading')
-    parser.add_argument('--epochs', default=1000, type=int,
+    parser.add_argument('--epochs', default=200, type=int,
                         help='Number of epochs to run')
     parser.add_argument('--th_iou', default=0.5, type=float,
                         help='IOU Threshold')
@@ -115,7 +115,7 @@ def main():
                         help='Step size for step lr scheduler')
     parser.add_argument('--use_multi_step_lr', default=False, action='store_true',
                         help='Use multi step lr scheduler')
-    parser.add_argument('--milestones', default=[500, 650, 800], type=int, nargs='*',
+    parser.add_argument('--milestones', default=[140, 170], type=int, nargs='*',
                         help='Milestones for multi step lr scheduler')
     parser.add_argument('--disable_augmentation', default=False, 
                         action='store_true',
