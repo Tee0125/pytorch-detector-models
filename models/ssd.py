@@ -18,6 +18,10 @@ presets = {
         'inherit': 'ssd300-voc'
     },
 
+    'ssd512': {
+        'inherit': 'ssd512-voc'
+    },
+
     'ssdlite': {
         'inherit': 'ssdlite-mobilenetv2-voc'
     },
@@ -45,6 +49,28 @@ presets = {
     'ssd300-bn-voc': {
         'inherit': 'ssd300-voc',
         'use_batchnorm': True
+    },
+
+    'ssd512-voc': {
+        'width': 512,
+        'num_class': 21,
+        'backbone': 'vgg16',
+        'extras': (
+            # type, output_channels, kernel_size, (stride), (padding)
+            (('c', 1024, 3, 1, 1), ('c', 1024, 1, 1, 0)), # 32x32
+            (('c',  256, 1, 1, 0), ('c',  512, 3, 2, 1)), # 16x16
+            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 8x8
+            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 4x4
+            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 2x2
+            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1))  # 1x1
+        ),
+        'ratios': (
+            (2.,), (2., 3.), (2., 3.), (2., 3.), (2.,3.), (2.,), (2.,)
+        ),
+        'num_grids': (64, 32, 16, 8, 4, 2, 1),
+
+        's_min': 0.1,
+        's_extra_min': 0.04,
     },
 
     'ssdlite-mobilenetv2-voc': {

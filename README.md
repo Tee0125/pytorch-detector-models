@@ -56,11 +56,13 @@ in case of ssd300 model, 11GB GPU memory is required for batch_size 32 and 8GB G
 ## Available models
 | name                    | description |
 |:-----------------------:|-------------|
-| ssd300                  | alias of ssd300-voc |
-| ssd300-voc              | SSD with input size 300 and num_class=20 |
-| ssd300-bn-voc           | batch normalization adopted version of ssd300-voc |
-| ssdlite                 | alias of ssdlite-mobilenetv2-voc |
-| ssdlite-mobilenetv2-voc | SSD with MobileNet v2 backbone, input size 320 and num_class=20 |
+| ssd300                  | alias of `ssd300-voc` |
+| ssd300-voc              | SSD with input size 300x300 and num_class=20 |
+| ssd300-bn-voc           | batch normalization adopted version of `ssd300-voc` |
+| ssd512                  | alias of `ssd512-voc` |
+| ssd512-voc              | SSD with input size 512x512 and num_class=20 |
+| ssdlite                 | alias of `ssdlite-mobilenetv2-voc` |
+| ssdlite-mobilenetv2-voc | SSD with MobileNet v2 backbone, input size 320x320 and num_class=20 |
 
 ## Available datasets
 | name                 | description |
