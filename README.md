@@ -1,8 +1,9 @@
 
 PyTorch implementation of:
 
-* [SSD](https://arxiv.org/abs/1512.02325)
-* [SSDlite](https://arxiv.org/abs/1801.04381) (SSD variant with MobileNet v2)
+* [SSD: Single Shot Multibox Detector](https://arxiv.org/abs/1512.02325)
+* [SSD-Lite: Lightweight SSD based on MobileNet](https://arxiv.org/abs/1801.04381) 
+* [RetinaNet: Focal Loss for Dense Object Detection](https://arxiv.org/abs/1708.02002)
 
 # Evaluation Results on VOC2007 test dataset
 
@@ -46,6 +47,7 @@ python detect_train.py
 | --use_step_lr       | use step lr scheduler | False  |
 | --step_size         | step_size for step lr scheduler | 30 |
 | --use_multi_step_lr | use multi step lr scheduler | False  |
+| --use_plateau_lr    | use plateau lr scheduler | False  |
 | --milestones        | milestones for multi step lr scheduler | 140 170 |
 | --disable_augmentation | disable random augmentation | False |
 | --enable_letterbox  | enable letter boxing image | False |
@@ -62,7 +64,12 @@ in case of ssd300 model, 11GB GPU memory is required for batch_size 32 and 8GB G
 | ssd512                  | alias of `ssd512-voc` |
 | ssd512-voc              | SSD with input size 512x512 and num_class=20 |
 | ssdlite                 | alias of `ssdlite-mobilenetv2-voc` |
-| ssdlite-mobilenetv2-voc | SSD with MobileNet v2 backbone, input size 320x320 and num_class=20 |
+| ssdlite-mobilenetv2-voc | SSD with MobileNet v2 backbone, input size 320x320 and `num_class`=20 |
+| retinanet               | alias of `retinanet-50-500-voc` |
+| retinanet-50-500-voc    | RetinaNet with resenet-50 backbone, input size 500x500 and `num_class`=20 |
+| retinanet-101-500-voc   | RetinaNet with resenet-101 backbone, input size 500x500 and `num_class`=20  |
+| retinanet-50-600-voc    | RetinaNet with resenet-50 backbone, input size 600x600 and `num_class`=20  |
+| retinanet-101-600-voc   | RetinaNet with resenet-101 backbone, input size 600x600 and `num_class`=20  |
 
 ## Available datasets
 | name                 | description |

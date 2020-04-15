@@ -3,7 +3,7 @@ import multiprocessing
 import torch
 
 from torch.optim import SGD
-from torch.optim.lr_scheduler import StepLR, MultiStepLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR, ReduceLROnPlateau
 
 from torch.utils.data import DataLoader
 
@@ -65,7 +65,10 @@ class DetectionTrainer:
         loss = sum(losses) / len(losses)
 
         if self.scheduler:
-            self.scheduler.step()
+            if isinstance(self.scheduler, ReduceLROnPlateau):
+                self.scheduler.step(loss)
+            else:
+                self.scheduler.step()
 
         if self.callback:
             self.callback.step_end(self, epoch, loss)
@@ -177,6 +180,9 @@ class DetectionTrainer:
             return MultiStepLR(self.optimizer,
                                self.args.milestones,
                                self.args.gamma)
+
+        elif self.args.use_plateau_lr:
+            return ReduceLROnPlateau(self.optimizer)
 
         else:
             return None

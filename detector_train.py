@@ -117,6 +117,8 @@ def main():
                         help='Use multi step lr scheduler')
     parser.add_argument('--milestones', default=[140, 170], type=int, nargs='*',
                         help='Milestones for multi step lr scheduler')
+    parser.add_argument('--use_plateau_lr', default=False, action='store_true',
+                        help='Use plateau lr scheduler')
     parser.add_argument('--disable_augmentation', default=False, 
                         action='store_true',
                         help='Disable random augmentation')

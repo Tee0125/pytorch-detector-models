@@ -2,6 +2,7 @@ import os
 import torch
 
 from .ssd import SSD, build_ssd
+from .retinanet import RetinaNet, build_retinanet
 
 
 def build_model(args, params=None, pretrained=False):
@@ -9,6 +10,8 @@ def build_model(args, params=None, pretrained=False):
 
     if model.startswith('ssd'):
         return build_ssd(model, params, pretrained=pretrained)
+    elif model.startswith('retinanet'):
+        return build_retinanet(model, params, pretrained=pretrained)
     
     raise Exception("unknown model %s" % args.model)
 

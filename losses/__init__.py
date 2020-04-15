@@ -1,4 +1,5 @@
 from .multi_box_loss import MultiBoxLoss
+from .focal_loss import FocalLoss
 
 
 def build_loss(args, anchor=None):
@@ -6,5 +7,7 @@ def build_loss(args, anchor=None):
 
     if model.startswith('ssd'):
         return MultiBoxLoss(anchor, args.th_iou)
+    elif model.startswith('retinanet'):
+        return FocalLoss(anchor)
 
     raise Exception("unknown model %s" % args.model)
