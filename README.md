@@ -6,12 +6,12 @@ PyTorch implementation of:
 
 # Evaluation Results on VOC2007 test dataset
 
-| model      | augumentation | training set          | epochs | loss  | mAP    |
-|:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|
-| ssd300     | X             | VOC2007 trainval      | 200    | 0.081 | 0.430  |
-| ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |
-| ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  |
-| ssdlite    | O             | VOC2007/2012 trainval | 200    | 2.286 | 0.691  |
+| model      | augumentation | training set          | epochs | loss  | mAP    | checkpoint | 
+|:----------:|:-------------:|:---------------------:|:------:|:-----:|:------:|:----------:|
+| ssd300     | X             | VOC2007 trainval      | 200    | 0.081 | 0.430  |            |
+| ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |            |
+| ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  | [download](https://drive.google.com/open?id=1waoa_BHAPNFpCZc86tfOCqU-aIMwBCQ3) |
+| ssdlite    | O             | VOC2007/2012 trainval | 200    | 2.286 | 0.691  | [download](https://drive.google.com/open?id=1QplZSBF3-ZiEDUlVFJsXMcwYlo_q3gzK) |
 
 option used for training is `--use_multi_step_lr`
 
