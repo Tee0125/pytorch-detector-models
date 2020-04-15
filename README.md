@@ -19,7 +19,7 @@ option used for training is `--use_multi_step_lr`
 # Pre-requisite
 
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 # Train
