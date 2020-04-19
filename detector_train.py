@@ -18,6 +18,11 @@ class Callback(TrainerCallback):
         print("Batch Size: %d" % args.batch_size)
         print("Learning Rate: %.3f" % args.lr)
 
+        if args.force_use_multiboxloss:
+            print("Loss Function: Multi Box Loss")
+        elif args.force_use_focalloss:
+            print("Loss Function: Focal Loss")
+
         if args.use_step_lr:
             print("Scheduler: Step LR scheduler")
             print("Step Size: %d" % args.step_size)
@@ -119,6 +124,12 @@ def main():
                         help='Milestones for multi step lr scheduler')
     parser.add_argument('--use_plateau_lr', default=False, action='store_true',
                         help='Use plateau lr scheduler')
+    parser.add_argument('--force_use_multiboxloss', default=False,
+                        action='store_true',
+                        help='Use multi box loss')
+    parser.add_argument('--force_use_focalloss', default=False,
+                        action='store_true',
+                        help='Use focal loss')
     parser.add_argument('--disable_augmentation', default=False, 
                         action='store_true',
                         help='Disable random augmentation')

@@ -3,6 +3,11 @@ from .focal_loss import FocalLoss
 
 
 def build_loss(args, anchor=None):
+    if args.force_use_multiboxloss:
+        return MultiBoxLoss(anchor, args.th_iou)
+    elif args.force_use_focalloss:
+        return FocalLoss(anchor)
+
     model = args.model.lower()
 
     if model.startswith('ssd'):
