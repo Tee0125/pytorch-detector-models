@@ -70,9 +70,7 @@ class Callback(TrainerCallback):
         # save model 
         postfix = str(epoch+1)
 
-        if epoch >= 1000 and (epoch % 100) != 99:
-            return
-        elif (epoch % 50) != 49:
+        if (epoch % 10) != 9:
             return
 
         t.save_model(postfix=postfix)
