@@ -16,6 +16,19 @@ PyTorch implementation of:
 
 option used for training is `--use_multi_step_lr`
 
+# Status
+
+- [x] Implement SSD / SSDLite model
+- [x] Train SSD / SSDLite and add evaluation results
+- [x] Implement RetinaNet
+- [ ] Train RetinaNet with Focal Loss and add evaluataion result
+- [ ] Implement EfficientDet
+- [ ] Train EfficientDet and add evaluation result
+- [ ] Support COCO dataset
+- [ ] Support custom dataset
+- [ ] Implement VGG challenge's mAP calculator
+- [ ] Implement COCO challenge's mAP calculator
+
 # Pre-requisite
 
 ```
