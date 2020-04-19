@@ -63,7 +63,7 @@ def inference(model, post_process, img, th_iou, th_conf, enable_letterbox):
 
     conf, loc = model(x)
 
-    return img, post_process(conf, loc, th_iou, th_conf)
+    return img, post_process(conf, loc)
 
 
 def single_run(model, post_process, x, dataset, 
@@ -134,7 +134,8 @@ def main():
     model, post_process = prepare_model(args, weight)
 
     for x in args.inputs:
-        single_run(model, post_process, x, dataset)
+        single_run(model, post_process, x, dataset,
+                   args.th_iou, args.th_conf, args.enable_letterbox)
 
 
 if __name__ == "__main__":
