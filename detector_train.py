@@ -28,6 +28,8 @@ class Callback(TrainerCallback):
             print("Scheduler: Multi-step LR scheduler")
             print("Milestones: %s" % ", ".join(milestones))
             print("Gamma: %.2f" % args.gamma)
+        elif args.use_plateau_lr:
+            print("Scheduler: ReduceLROnPlateau scheduler")
         else:
             print("Scheduler: None")
 
