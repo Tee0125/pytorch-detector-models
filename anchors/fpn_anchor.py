@@ -3,15 +3,19 @@ import torch
 
 class FpnAnchor:
     def __init__(self, pyramid_size, depth, box_sizes, ratios):
-        boxes = []
-
+        grid_sizes = []
         for i in range(depth):
-            step = 1.0 / pyramid_size
+            grid_sizes.insert(0, pyramid_size)
+            pyramid_size = (pyramid_size + 1) // 2
 
-            for j in range(pyramid_size):
+        boxes = []
+        for grid_size in grid_sizes:
+            step = 1.0 / grid_size
+
+            for j in range(grid_size):
                 cy = (j + 0.5) * step
 
-                for i in range(pyramid_size):
+                for i in range(grid_size):
                     cx = (i + 0.5) * step
 
                     for b in box_sizes:
@@ -20,8 +24,6 @@ class FpnAnchor:
                             h = step * b / r
 
                             boxes.append([cx, cy, w, h])
-
-            pyramid_size = (pyramid_size + 1) // 2
 
         boxes = torch.tensor(boxes).detach()
 
@@ -62,18 +64,16 @@ class FpnAnchor:
     def decode(self, encoded):
         has_batch = len(encoded.shape) == 3
 
-        encoded *= 0.1
-
         if not has_batch:
             encoded = encoded.unsqueeze(0)
 
         anchor = self.anchors.expand_as(encoded)
 
         # delta_x * anchor_width + anchor_x
-        xy = encoded[:, :, 0:2] * anchor[:, :, 2:4] + anchor[:, :, 0:2]
+        xy = encoded[:, :, 0:2] * 0.1 * anchor[:, :, 2:4] + anchor[:, :, 0:2]
 
         # exp(delta_w) * anchor_width
-        half_wh = torch.exp(encoded[:, :, 2:4]) * anchor[:, :, 2:4] / 2.
+        half_wh = torch.exp(encoded[:, :, 2:4] * 0.1) * anchor[:, :, 2:4] / 2.
 
         raw = torch.cat((xy - half_wh, xy + half_wh), 2)
         if not has_batch:
