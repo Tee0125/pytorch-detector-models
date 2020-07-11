@@ -49,7 +49,7 @@ class MeanAp:
             detected_all.extend(detected)
             num_truth_all += num_truth
 
-        return self.calc_ap(detected_all, num_truth_all), ap
+        return sum(ap) / len(ap), ap
 
     def calc_ap(self, detected, num_truth):
         k = lambda x: x['conf']
