@@ -27,12 +27,12 @@ presets = {
         'num_class': 21,
         'backbone': 'vgg16',
         'extras': (
-            # type, output_channels, kernel_size, (stride), (padding)
-            (('c', 1024, 3, 1, 1), ('c', 1024, 1, 1, 0)), # 19x19
-            (('c',  256, 1, 1, 0), ('c',  512, 3, 2, 1)), # 10x10
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 5x5
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 1, 0)), # 3x3
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 1, 0))  # 1x1
+            # output_channels, kernel_size, (stride), (padding)
+            ((1024, 3, 1, 1), (1024, 1, 1, 0)), # 19x19
+            (( 256, 1, 1, 0), ( 512, 3, 2, 1)), # 10x10
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1)), # 5x5
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1)), # 3x3
+            (( 128, 1, 1, 0), ( 256, 3, 1, 0))  # 1x1
         ),
         'ratios': (
             (2.,), (2., 3.), (2., 3.), (2., 3.), (2.,), (2.,)
@@ -53,12 +53,12 @@ presets = {
         'backbone': 'vgg16',
         'extras': (
             # type, output_channels, kernel_size, (stride), (padding)
-            (('c', 1024, 3, 1, 1), ('c', 1024, 1, 1, 0)), # 32x32
-            (('c',  256, 1, 1, 0), ('c',  512, 3, 2, 1)), # 16x16
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 8x8
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 4x4
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1)), # 2x2
-            (('c',  128, 1, 1, 0), ('c',  256, 3, 2, 1))  # 1x1
+            ((1024, 3, 1, 1), (1024, 1, 1, 0)), # 32x32
+            (( 256, 1, 1, 0), ( 512, 3, 2, 1)), # 16x16
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1)), # 8x8
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1)), # 4x4
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1)), # 2x2
+            (( 128, 1, 1, 0), ( 256, 3, 2, 1))  # 1x1
         ),
         'ratios': (
             (2.,), (2., 3.), (2., 3.), (2., 3.), (2.,3.), (2.,), (2.,)
@@ -90,6 +90,10 @@ class SSD(nn.Module):
         self.apply_params(presets['default'])
         self.apply_params(presets[preset])
         self.apply_params(params)
+
+        # placeholder for sliced backbone
+        self.b0 = None
+        self.b1 = None
 
         p = self.params
 
@@ -167,21 +171,11 @@ class SSD(nn.Module):
 
         extra = []
         for layer in layers:
-            out_channels = layer[1]
+            out_channels = layer[0]
 
-            if layer[0] == 'c':
-                extra.append(nn.Conv2dReLU(in_channels,
-                                           out_channels,
-                                           *layer[2:],
-                                           use_batchnorm=use_bn))
-
-            elif layer[0] == 'i':
-                extra.append(nn.InvertedBottleneck(in_channels,
-                                                   out_channels,
-                                                   *layer[2:],
-                                                   use_batchnorm=use_bn))
-            else:
-                raise Exception("Extra layer config is broken")
+            extra.append(nn.Conv2dReLU(in_channels,
+                                       *layer,
+                                       use_batchnorm=use_bn))
 
             in_channels = out_channels
 
