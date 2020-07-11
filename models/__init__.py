@@ -2,13 +2,16 @@ import os
 import torch
 
 from .ssd import SSD, build_ssd
+from .ssdlite import SSDLite, build_ssdlite
 from .retinanet import RetinaNet, build_retinanet
 
 
 def build_model(args, params=None, pretrained=False):
     model = args.model.lower()
 
-    if model.startswith('ssd'):
+    if model.startswith('ssdlite'):
+        return build_ssdlite(model, params, pretrained=pretrained)
+    elif model.startswith('ssd'):
         return build_ssd(model, params, pretrained=pretrained)
     elif model.startswith('retinanet'):
         return build_retinanet(model, params, pretrained=pretrained)
