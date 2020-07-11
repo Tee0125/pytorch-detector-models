@@ -150,7 +150,7 @@ class SSD(nn.Module):
             x = extra(x)
             pyramid.append(x)
 
-        batch_size = int(x.shape[0])
+        batch_size = x.shape[0]
 
         conf = []
         loc = []
