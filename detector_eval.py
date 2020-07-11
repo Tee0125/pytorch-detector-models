@@ -24,6 +24,8 @@ def main():
                         type=str, help='VOC or COCO')
     parser.add_argument('--dataset_root', default='downloads',
                         help='Dataset root directory path')
+    parser.add_argument('--download', default=False, action='store_true',
+                        help='Download dataset')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_workers', default=-1, type=int,

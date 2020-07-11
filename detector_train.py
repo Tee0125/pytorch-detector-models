@@ -96,6 +96,8 @@ def main():
                         help='Dataset root directory path')
     parser.add_argument('--model', default='ssd300',
                         help='Detector model name')
+    parser.add_argument('--download', default=False, action='store_true',
+                        help='Download dataset')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
     parser.add_argument('--resume', default=None, type=str,

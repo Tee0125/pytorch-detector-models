@@ -49,6 +49,7 @@ python detect_train.py
 | --model             | model name | ssd300 |
 | --dataset           | dataset name | VOC |
 | --dataset_root      | dataset location | downloads |
+| --download          | download dataset | False |
 | --epochs            | number of epochs to run | 200 |
 | --batch_size        | size of mini-batch | 32 |
 | --lr                | learning rate for SGD | 1e-3  |

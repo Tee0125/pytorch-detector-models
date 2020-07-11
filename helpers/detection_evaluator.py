@@ -84,7 +84,7 @@ class DetectionEvaluator:
 
         dataset = load_dataset(args,
                                image_set='test', 
-                               download=True, 
+                               download=args.download,
                                transforms=t)
 
         return dataset

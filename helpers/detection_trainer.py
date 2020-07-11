@@ -124,7 +124,7 @@ class DetectionTrainer:
 
         dataset = load_dataset(args, 
                                image_set='trainval', 
-                               download=True, 
+                               download=args.download,
                                transforms=t)
 
         return dataset
