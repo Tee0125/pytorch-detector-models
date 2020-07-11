@@ -21,16 +21,16 @@ presets = {
         'num_class': 21,
         'backbone': 'mobilenet_v2',
         'extras': (
-            # type, output_channels, kernel_size, (stride), (padding)
-            (('i',  256, 3, 1, 1), ('i',  512, 1, 1)), # 10x10
-            (('i',  128, 3, 1, 1), ('i',  256, 1, 2)), # 5x5
-            (('i',  128, 3, 1, 0), ('i',  256, 1, 1)), # 3x3
-            (('i',  128, 3, 1, 0), ('i',  256, 1, 1))  # 1x1
+            # output_channels, kernel_size, (stride), (padding)
+            (512, 3, 2, 1), # 5x5
+            (256, 3, 2, 1), # 3x3
+            (256, 3, 2, 1), # 2x2
+            (128, 3, 2, 1), # 1x1
         ),
         'ratios': (
-            (2.,3.), (2., 3.), (2., 3.), (2.,3.), (2.,3.)
+            (2., 3.), (2., 3.), (2., 3.), (2., 3.), (2., 3.), (2., 3.)
         ),
-        'num_grids': (20, 10, 5, 3, 1),
+        'num_grids': (20, 10, 5, 3, 2, 1),
     },
 }
 
@@ -51,6 +51,10 @@ class SSDLite(nn.Module):
         self.apply_params(presets['default'])
         self.apply_params(presets[preset])
         self.apply_params(params)
+
+        # placeholder for sliced backbones
+        self.b0 = None
+        self.b1 = None
 
         p = self.params
 
@@ -84,6 +88,7 @@ class SSDLite(nn.Module):
 
         # scale1, ...
         x = self.b1(x)
+        pyramid.append(x)
 
         for extra in self.extras:
             x = extra(x)
@@ -116,46 +121,23 @@ class SSDLite(nn.Module):
         in_channels = self.calc_in_channel_width(self.b1)
 
         extras = []
-        for layers in self.params['extras']:
-            extra, in_channels = self.build_extra(in_channels, layers)
+        for layer in self.params['extras']:
+            extra, in_channels = self.build_extra(in_channels, layer)
 
             extras.append(extra)
 
         self.extras = nn.ModuleList(extras)
 
-    def build_extra(self, in_channels, layers):
-        use_bn = self.params['use_batchnorm']
+    def build_extra(self, in_channels, layer):
+        extra = nn.InvertedBottleneck(in_channels, *layer, expand_ratio=2.)
 
-        extra = []
-        for layer in layers:
-            out_channels = layer[1]
-
-            if layer[0] == 'c':
-                extra.append(nn.Conv2dReLU(in_channels,
-                                           out_channels,
-                                           *layer[2:],
-                                           use_batchnorm=use_bn))
-
-            elif layer[0] == 'i':
-                extra.append(nn.InvertedBottleneck(in_channels,
-                                                   out_channels,
-                                                   *layer[2:],
-                                                   use_batchnorm=use_bn))
-            else:
-                raise Exception("Extra layer config is broken")
-
-            in_channels = out_channels
-
-        extra = nn.Sequential(*extra)
-        extra.out_channels = out_channels
-
-        return extra, out_channels
+        return extra, layer[0]
 
     def build_regressions(self):
         classifiers = []
         box_regressions = []
 
-        extras = [self.b0]
+        extras = [self.b0, self.b1]
         extras.extend(self.extras)
 
         # from extras
@@ -163,11 +145,13 @@ class SSDLite(nn.Module):
             in_channels = self.calc_in_channel_width(extra)
             n = self.default_box.get_num_ratios(i)
 
-            classifier = nn.Conv2d(in_channels, n * self.num_class, 3, 1, 1)
-            classifiers.append(classifier)
+            channels = n * self.num_class
+            regression = nn.SeparableConv2d(in_channels, channels, 3, 1, 1)
+            classifiers.append(regression)
 
-            box_regression = nn.Conv2d(in_channels, n * 4, 3, 1, 1)
-            box_regressions.append(box_regression)
+            channels = n * 4
+            regression = nn.SeparableConv2d(in_channels, channels, 3, 1, 1)
+            box_regressions.append(regression)
 
         in_channels = self.calc_in_channel_width(self.b0)
         l2_norm = nn.Norm2d(in_channels)
