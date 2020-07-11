@@ -22,10 +22,6 @@ presets = {
         'inherit': 'ssd512-voc'
     },
 
-    'ssdlite': {
-        'inherit': 'ssdlite-mobilenetv2-voc'
-    },
-
     'ssd300-voc': {
         'width': 300,
         'num_class': 21,
@@ -71,24 +67,6 @@ presets = {
 
         's_min': 0.1,
         's_extra_min': 0.04,
-    },
-
-    'ssdlite-mobilenetv2-voc': {
-        'width': 320,
-        'num_class': 21,
-        'backbone': 'mobilenet_v2',
-        'extras': (
-            # type, output_channels, kernel_size, (stride), (padding)
-            (('i',  256, 3, 1, 1), ('i',  512, 1, 1)), # 10x10
-            (('i',  128, 3, 1, 1), ('i',  256, 1, 2)), # 5x5
-            (('i',  128, 3, 1, 0), ('i',  256, 1, 1)), # 3x3
-            (('i',  128, 3, 1, 0), ('i',  256, 1, 1))  # 1x1
-        ),
-        'ratios': (
-            (2.,), (2., 3.), (2., 3.), (2.,), (2.,)
-        ),
-        'num_grids': (20, 10, 5, 3, 1),
-        'use_batchnorm': True
     },
 }
 
@@ -258,16 +236,6 @@ class SSD(nn.Module):
 
             b0.out_channels = 512
             b1.out_channels = 512
-
-        elif backbone == "mobilenet_v2":
-            model = models.mobilenet_v2(pretrained=pretrained)
-            features = model.features
-
-            b0 = nn.Sequential(features[0:14], features[14].conv[0])
-            b1 = nn.Sequential(features[14].conv[1:], features[15:])
-
-            b0.out_channels = 576
-            b1.out_channels = 1280
 
         else:
             raise Exception("unimplemented backbone %s" % backbone)
