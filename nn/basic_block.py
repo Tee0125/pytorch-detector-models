@@ -107,7 +107,8 @@ class SeparableConv2d(nn.Module):
                  kernel_size,
                  stride=1,
                  padding=0,
-                 bias=True):
+                 bias=True,
+                 use_batchnorm=True):
 
         super().__init__()
 
@@ -121,6 +122,9 @@ class SeparableConv2d(nn.Module):
                                 padding=padding,
                                 groups=in_channels,
                                 bias=bias))
+
+        if use_batchnorm:
+            layers.append(nn.BatchNorm2d(in_channels))
 
         layers.append(nn.ReLU6(inplace=True))
 
