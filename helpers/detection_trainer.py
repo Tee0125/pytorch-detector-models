@@ -56,9 +56,6 @@ class DetectionTrainer:
         losses = []
 
         for i, batch in enumerate(self.dataloader):
-            if batch[0].size(0) < self.args.batch_size:
-                continue
-
             loss = self.minibatch(model, epoch, i, batch)
             losses.append(loss)
 
@@ -141,6 +138,7 @@ class DetectionTrainer:
                                 pin_memory=True,
                                 shuffle=True,
                                 batch_size=args.batch_size,
+                                drop_last=True,
                                 num_workers=num_workers,
                                 collate_fn=self.collate)
 
