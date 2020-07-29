@@ -85,16 +85,20 @@ class FocalLoss:
     def calc_loss(self, coord, label, loc, conf):
         # calculate focal loss
         l_conf = self.focal_loss(label, conf)
+        l_loc = self.smooth_l1_loss(coord, label, loc)
 
-        # calculate location loss for positive samples
+        return l_conf + l_loc
+
+    @staticmethod
+    def smooth_l1_loss(coord, label, loc):
         pos_mask = label > 0
 
         pos_coord = coord[pos_mask]
         pos_loc = loc[pos_mask]
 
-        l_loc = F.smooth_l1_loss(pos_loc, pos_coord, reduction='sum')
+        loss = F.smooth_l1_loss(pos_loc, pos_coord, reduction='sum')
 
-        return (l_conf + l_loc) / pos_mask.numel()
+        return loss / pos_mask.sum()
 
     def focal_loss(self, label, conf):
         alpha = self.alpha
@@ -129,4 +133,4 @@ class FocalLoss:
                                                   weight.detach(),
                                                   reduction='sum')
 
-        return loss
+        return loss / mask.sum()
