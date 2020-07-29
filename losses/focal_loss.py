@@ -87,29 +87,46 @@ class FocalLoss:
         l_conf = self.focal_loss(label, conf)
 
         # calculate location loss for positive samples
-        pos_mask = label != 0
+        pos_mask = label > 0
 
         pos_coord = coord[pos_mask]
         pos_loc = loc[pos_mask]
 
-        l_loc = F.smooth_l1_loss(pos_loc, pos_coord)
+        l_loc = F.smooth_l1_loss(pos_loc, pos_coord, reduction='sum')
 
-        return l_conf + l_loc
+        return (l_conf + l_loc) / pos_mask.numel()
 
     def focal_loss(self, label, conf):
+        alpha = self.alpha
+        gamma = self.gamma
+
+        num_class = conf.size(2)
+
+        one_hot = torch.eye(num_class)
+
+        if torch.cuda.is_available():
+            one_hot = one_hot.cuda()
+
         # ignore ambiguious samples
         mask = label >= 0
 
-        conf = conf[mask]
         label = label[mask]
+        conf = conf[mask]
 
-        tmp = F.log_softmax(conf, 1)
+        tf_map = one_hot[label][..., 1:]
+        conf = conf[..., 1:]
 
-        log_pt = tmp.gather(1, label.unsqueeze(1))
-        pt = log_pt.exp()
+        # calculate focal loss
+        score = conf.sigmoid()
 
-        loss = -((1 - pt)**self.gamma) * log_pt
-        loss[label!=0] *= self.alpha
+        p_t = tf_map * score + (1 - tf_map) * (1. - score)
+        alpha = tf_map * alpha + (1 - tf_map) * (1. - alpha)
 
-        return loss.mean()
+        weight = torch.pow(1. - p_t, gamma) * alpha
 
+        # conf.sigmoid() is applied in binary_cross_entropy_with_logits
+        loss = F.binary_cross_entropy_with_logits(conf, tf_map,
+                                                  weight.detach(),
+                                                  reduction='sum')
+
+        return loss
