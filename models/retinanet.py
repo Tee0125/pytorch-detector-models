@@ -128,7 +128,7 @@ class RetinaNet(nn.Module):
             y = self.classifiers(x).permute(0, 2, 3, 1)
             conf.append(y.reshape(batch_size, -1, self.num_class))
 
-            y = self.box_regressions[i](x).permute(0, 2, 3, 1)
+            y = self.box_regressions(x).permute(0, 2, 3, 1)
             loc.append(y.reshape(batch_size, -1, 4))
 
         conf = torch.cat(conf, dim=1)
@@ -217,17 +217,14 @@ class RetinaNet(nn.Module):
                                     nn.Sigmoid())
 
         out_channels = num_box * 4
-        for i in range(len(self.top_down_layers)+1):
-            regression = nn.Sequential(nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                       nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                       nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                       nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                       nn.Conv2d(256, out_channels, 3, 1, 1))
-
-            box_regressions.append(regression)
+        box_regressions = nn.Sequential(nn.Conv2dReLU(256, 256, 3, 1, 1),
+                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
+                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
+                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
+                                        nn.Conv2d(256, out_channels, 3, 1, 1))
 
         self.classifiers = classifiers
-        self.box_regressions = nn.ModuleList(box_regressions)
+        self.box_regressions = box_regressions
 
     def initialize_parameters(self):
         self.initialize_weight(self.bottom_up_layers[2:])
