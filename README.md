@@ -13,7 +13,7 @@ PyTorch implementation of:
 | ssd300     | X             | VOC2007/2012 trainval | 200    | 0.081 | 0.522  |            |
 | ssdlite    | O             | VOC2007/2012 trainval | 200    | 2.469 | 0.712  | [download](https://drive.google.com/file/d/1QplZSBF3-ZiEDUlVFJsXMcwYlo_q3gzK) |
 | ssd300     | O             | VOC2007/2012 trainval | 200    | 2.139 | 0.776  | [download](https://drive.google.com/open?id=1waoa_BHAPNFpCZc86tfOCqU-aIMwBCQ3) |
-| ssd512     | O             | VOC2007/2012 trainval | 200    | 2.012 | 0.781  | [download](https://drive.google.com/file/d/1QplZSBF3-ZiEDUlVFJsXMcwYlo_q3gzK) |
+| ssd512     | O             | VOC2007/2012 trainval | 200    | 2.012 | 0.792  | [download](https://drive.google.com/file/d/1-Nw730Uf5lJ_otRbJpTSwg0OKqeTM2Sq) |
 
 option used for training is `--use_multi_step_lr`
 
