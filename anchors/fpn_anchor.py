@@ -1,4 +1,5 @@
 import torch
+import math
 
 
 class FpnAnchor:
@@ -8,9 +9,12 @@ class FpnAnchor:
             grid_sizes.insert(0, pyramid_size)
             pyramid_size = (pyramid_size + 1) // 2
 
+        scale = grid_sizes[0]
+
         boxes = []
         for grid_size in grid_sizes:
             step = 1.0 / grid_size
+            size = scale * step
 
             for j in range(grid_size):
                 cy = (j + 0.5) * step
@@ -20,8 +24,10 @@ class FpnAnchor:
 
                     for b in box_sizes:
                         for r in ratios:
-                            w = step * b * r
-                            h = step * b / r
+                            r = math.sqrt(r)
+
+                            w = size * b * r
+                            h = size * b / r
 
                             boxes.append([cx, cy, w, h])
 

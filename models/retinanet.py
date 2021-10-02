@@ -58,11 +58,18 @@ class CrossScaleBlock(nn.Module):
     def __init__(self, in_channels, out_channels, size):
         super().__init__()
 
-        self.conv = nn.Conv2d(in_channels, out_channels, 1)
+        conv = [nn.Conv2d(in_channels, out_channels, 1),
+                          nn.BatchNorm2d(out_channels)]
+
+        layer_conv = [nn.Conv2d(out_channels, out_channels, 3, 1, 1),
+                      nn.BatchNorm2d(out_channels)]
+
+        self.conv = nn.Sequential(*conv)
         self.upsample = nn.Upsample(size)
+        self.layer_conv = nn.Sequential(*layer_conv)
 
     def forward(self, x, y):
-        return self.conv(x) + self.upsample(y)
+        return self.layer_conv(self.conv(x) + self.upsample(y))
 
 
 class RetinaNet(nn.Module):
@@ -119,7 +126,7 @@ class RetinaNet(nn.Module):
             x = layer(bottom_up.pop(), x)
             top_down.append(x)
 
-        batch_size = int(x.shape[0])
+        batch_size = x.shape[0]
 
         conf = []
         loc = []
@@ -172,10 +179,12 @@ class RetinaNet(nn.Module):
 
         # build remaining layers
         in_channels = self.calc_in_channel_width(p5)
-        p6 = nn.Conv2d(in_channels, 256, 3, stride=2, padding=1)
+        p6 = nn.Sequential(nn.Conv2d(in_channels, 256, 3, 2, 1),
+                           nn.BatchNorm2d(256))
 
         p7 = nn.Sequential(nn.ReLU(),
-                           nn.Conv2d(256, 256, 3, stride=2, padding=1))
+                           nn.Conv2d(256, 256, 3, 2, 1),
+                           nn.BatchNorm2d(256))
 
         # register bottom up layers
         self.bottom_up_layers = nn.ModuleList((p3, p4, p5, p6, p7))
@@ -205,22 +214,27 @@ class RetinaNet(nn.Module):
     def build_regressions(self):
         box_regressions = []
 
+        params = {
+            'stride': 1,
+            'padding': 1,
+            'use_batchnorm': True
+        }
+
         num_box = len(self.params['box_sizes']) * len(self.params['ratios'])
         num_class = self.num_class
 
         out_channels = num_box * num_class
-        classifiers = nn.Sequential(nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                    nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                    nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                    nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                    nn.Conv2d(256, out_channels, 3, 1, 1),
-                                    nn.Sigmoid())
+        classifiers = nn.Sequential(nn.Conv2dReLU(256, 256, 3, **params),
+                                    nn.Conv2dReLU(256, 256, 3, **params),
+                                    nn.Conv2dReLU(256, 256, 3, **params),
+                                    nn.Conv2dReLU(256, 256, 3, **params),
+                                    nn.Conv2d(256, out_channels, 3, 1, 1))
 
         out_channels = num_box * 4
-        box_regressions = nn.Sequential(nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
-                                        nn.Conv2dReLU(256, 256, 3, 1, 1),
+        box_regressions = nn.Sequential(nn.Conv2dReLU(256, 256, 3, **params),
+                                        nn.Conv2dReLU(256, 256, 3, **params),
+                                        nn.Conv2dReLU(256, 256, 3, **params),
+                                        nn.Conv2dReLU(256, 256, 3, **params),
                                         nn.Conv2d(256, out_channels, 3, 1, 1))
 
         self.classifiers = classifiers
@@ -247,6 +261,8 @@ class RetinaNet(nn.Module):
             return prev.bn3.num_features
         elif type(prev).__name__ == 'Conv2d':
             return prev.out_channels
+        elif type(prev).__name__ == 'BatchNorm2d':
+            return prev.num_features
         else:
             raise Exception("failed to guess input channel width")
 

@@ -11,12 +11,12 @@ class FocalLoss:
         self.alpha = alpha
         self.gamma = gamma
 
-    def __call__(self, truth, conf, loc):
+    def __call__(self, truth, logit, loc):
         _coord = []
         _label = []
 
         _loc = []
-        _conf = []
+        _logit = []
 
         for idx in range(0, len(truth)):
             _truth = truth[idx]
@@ -33,15 +33,15 @@ class FocalLoss:
             _label.append(label)
 
             _loc.append(loc[idx])
-            _conf.append(conf[idx])
+            _logit.append(logit[idx])
 
         coord = torch.stack(_coord, 0)
         label = torch.stack(_label, 0)
 
         loc = torch.stack(_loc, 0)
-        conf = torch.stack(_conf, 0)
+        logit = torch.stack(_logit, 0)
 
-        return self.calc_loss(coord, label, loc, conf)
+        return self.calc_loss(coord, label, loc, logit)
 
     def truth2anchor(self, truth):
         # step1. matching strategy
@@ -62,19 +62,14 @@ class FocalLoss:
         # - max(...) per anchor
         max_iou, max_iou_idx = iou.max(dim=0)
 
-        # - link ground truth to best matched anchor box
-        for truth_idx, anchor_idx in enumerate(best_match_idx):
-            max_iou[anchor_idx] = 1.
-            max_iou_idx[anchor_idx] = truth_idx
-
         # - labels, coord per box
         coord = truth_coord[max_iou_idx]
         label = truth_label[max_iou_idx]
 
-        # - set label to unknown for conf < 0.5
+        # - set label to unknown for IOU < 0.5
         label[max_iou < 0.5] = -1
 
-        # - set label to background for conf < 0.4
+        # - set label to background for IOU < 0.4
         label[max_iou < 0.4] = 0
 
         # x1y1x2y2 to cxcywh
@@ -82,12 +77,12 @@ class FocalLoss:
 
         return coord.detach(), label.detach()
 
-    def calc_loss(self, coord, label, loc, conf):
+    def calc_loss(self, coord, label, loc, logit):
         # calculate focal loss
-        l_conf = self.focal_loss(label, conf)
+        l_logit = self.focal_loss(label, logit)
         l_loc = self.smooth_l1_loss(coord, label, loc)
 
-        return l_conf + l_loc
+        return l_logit + l_loc
 
     @staticmethod
     def smooth_l1_loss(coord, label, loc):
@@ -100,11 +95,11 @@ class FocalLoss:
 
         return loss / pos_mask.sum()
 
-    def focal_loss(self, label, conf):
+    def focal_loss(self, label, logit):
         alpha = self.alpha
         gamma = self.gamma
 
-        num_class = conf.size(2)
+        num_class = logit.size(2)
 
         one_hot = torch.eye(num_class)
 
@@ -115,22 +110,22 @@ class FocalLoss:
         mask = label >= 0
 
         label = label[mask]
-        conf = conf[mask]
+        logit = logit[mask]
 
-        tf_map = one_hot[label][..., 1:]
-        conf = conf[..., 1:]
+        target = one_hot[label][..., 1:]
+        logit = logit[..., 1:]
 
         # calculate focal loss
-        score = conf.sigmoid()
+        p = logit.sigmoid()
+        neg_target = 1. - target
 
-        p_t = tf_map * score + (1 - tf_map) * (1. - score)
-        alpha = tf_map * alpha + (1 - tf_map) * (1. - alpha)
+        p_t = target * p + neg_target * (1. - p)
+        alpha = target * alpha + neg_target * (1. - alpha)
 
-        weight = torch.pow(1. - p_t, gamma) * alpha
+        modulator = torch.pow(1. - p_t, gamma)
 
-        # conf.sigmoid() is applied in binary_cross_entropy_with_logits
-        loss = F.binary_cross_entropy_with_logits(conf, tf_map,
-                                                  weight.detach(),
-                                                  reduction='sum')
+        # logit.sigmoid() is applied in binary_cross_entropy_with_logits
+        loss = F.binary_cross_entropy_with_logits(logit, target,
+                                                  reduction='none')
 
-        return loss / mask.sum()
+        return torch.sum(alpha * modulator * loss) / mask.sum()
