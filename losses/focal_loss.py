@@ -62,6 +62,11 @@ class FocalLoss:
         # - max(...) per anchor
         max_iou, max_iou_idx = iou.max(dim=0)
 
+        # - link ground truth to best matched anchor box
+        for truth_idx, anchor_idx in enumerate(best_match_idx):
+            max_iou[anchor_idx] = 1.
+            max_iou_idx[anchor_idx] = truth_idx
+
         # - labels, coord per box
         coord = truth_coord[max_iou_idx]
         label = truth_label[max_iou_idx]
@@ -78,33 +83,32 @@ class FocalLoss:
         return coord.detach(), label.detach()
 
     def calc_loss(self, coord, label, loc, logit):
-        # calculate focal loss
-        l_logit = self.focal_loss(label, logit)
-        l_loc = self.smooth_l1_loss(coord, label, loc)
-
-        return l_logit + l_loc
-
-    @staticmethod
-    def smooth_l1_loss(coord, label, loc):
         pos_mask = label > 0
 
-        pos_coord = coord[pos_mask]
-        pos_loc = loc[pos_mask]
+        # calculate focal loss
+        l_logit = self.focal_loss(label, logit)
 
-        loss = F.smooth_l1_loss(pos_loc, pos_coord, reduction='sum')
+        # calculate localization loss
+        coord = coord[pos_mask]
+        loc = loc[pos_mask]
 
-        return loss / pos_mask.sum()
+        l_loc = self.smooth_l1_loss(coord, loc)
+
+        return (l_logit + l_loc) / pos_mask.sum()
+
+    @staticmethod
+    def smooth_l1_loss(coord, loc):
+        loss = F.smooth_l1_loss(loc, coord, reduction='sum')
+
+        return loss
 
     def focal_loss(self, label, logit):
+        num_class = logit.size(2)
+
         alpha = self.alpha
         gamma = self.gamma
 
-        num_class = logit.size(2)
-
-        one_hot = torch.eye(num_class)
-
-        if torch.cuda.is_available():
-            one_hot = one_hot.cuda()
+        one_hot = torch.eye(num_class + 1).to(logit.device)
 
         # ignore ambiguious samples
         mask = label >= 0
@@ -113,7 +117,6 @@ class FocalLoss:
         logit = logit[mask]
 
         target = one_hot[label][..., 1:]
-        logit = logit[..., 1:]
 
         # calculate focal loss
         p = logit.sigmoid()
@@ -128,4 +131,4 @@ class FocalLoss:
         loss = F.binary_cross_entropy_with_logits(logit, target,
                                                   reduction='none')
 
-        return torch.sum(alpha * modulator * loss) / mask.sum()
+        return torch.sum(alpha * modulator * loss)

@@ -1,6 +1,6 @@
 import argparse
 
-from helpers import DetectionTrainer
+from helpers import DetectionTrainer, DetectionEvaluator
 from utils import TrainerCallback
 
 from tensorboardX import SummaryWriter
@@ -41,6 +41,8 @@ class Callback(TrainerCallback):
         print("Momentum: %.1f" % args.momentum)
         print("")
 
+        self.args = args
+
         self.min_loss = 99.99
 
         self.batch_size = args.batch_size
@@ -52,6 +54,7 @@ class Callback(TrainerCallback):
     def fit_start(self, t):
         batch_size = self.batch_size
         self.total_cnt = len(t.dataset)
+        self.evaluator = DetectionEvaluator(self.args, t.model)
 
     def step_start(self, t, epoch):
         print("epoch#%d start" % epoch)
@@ -64,6 +67,8 @@ class Callback(TrainerCallback):
 
     def step_end(self, t, epoch, loss):
         print("epoch#%d end - mean loss=%.3f" % (epoch, loss))
+
+        self.evaluator()
 
         # write log
         self.min_loss = min(self.min_loss, loss)
@@ -108,6 +113,8 @@ def main():
                         help='Number of epochs to run')
     parser.add_argument('--th_iou', default=0.5, type=float,
                         help='IOU Threshold')
+    parser.add_argument('--th_conf', default=0.5, type=float,
+                        help='confidence Threshold')
     parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float,
                         help='Initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float,

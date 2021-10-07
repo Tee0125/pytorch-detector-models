@@ -17,7 +17,7 @@ presets = {
     },
     'retinanet-50-500-voc': {
         'inherit': 'retinanet-50-500',
-        'num_class': 21
+        'num_class': 20
     },
     'retinanet-50-500': {
         'width': 500,
@@ -26,7 +26,7 @@ presets = {
     },
     'retinanet-50-600-voc': {
         'inherit': 'retinanet-50-600',
-        'num_class': 21
+        'num_class': 20
     },
     'retinanet-50-600': {
         'width': 600,
@@ -35,7 +35,7 @@ presets = {
     },
     'retinanet-101-500-voc': {
         'inherit': 'retinanet-101-500',
-        'num_class': 21
+        'num_class': 20
     },
     'retinanet-101-500': {
         'width': 500,
@@ -44,7 +44,7 @@ presets = {
     },
     'retinanet-101-600-voc': {
         'inherit': 'retinanet-101-600',
-        'num_class': 21
+        'num_class': 20
     },
     'retinanet-101-600': {
         'width': 600,
@@ -131,7 +131,7 @@ class RetinaNet(nn.Module):
         conf = []
         loc = []
 
-        for i, x in enumerate(top_down):
+        for x in top_down:
             y = self.classifiers(x).permute(0, 2, 3, 1)
             conf.append(y.reshape(batch_size, -1, self.num_class))
 
@@ -148,6 +148,10 @@ class RetinaNet(nn.Module):
 
     def get_input_size(self):
         return self.params['width'], self.params['width']
+
+    @staticmethod
+    def get_classifier():
+        return 'sigmoid'
 
     def build_pyramid(self, pretrained):
         # build bottom-up pathway
@@ -247,12 +251,20 @@ class RetinaNet(nn.Module):
         self.initialize_weight(self.classifiers)
         self.initialize_weight(self.box_regressions)
 
-    def initialize_weight(self, layer):
+        self.initialize_bias(self.classifiers[-1])
+
+    @staticmethod
+    def initialize_weight(layer):
         for module in layer.modules():
             if isinstance(module, nn.Conv2d):
                 nn.init.normal_(module.weight, std=0.01)
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
+
+    @staticmethod
+    def initialize_bias(layer):
+        pi = 0.01
+        nn.init.constant_(layer.bias, -math.log((1 - pi) / pi))
 
     def calc_in_channel_width(self, prev):
         if type(prev).__name__ == 'Sequential':

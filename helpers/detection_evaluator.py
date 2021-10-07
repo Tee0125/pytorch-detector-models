@@ -18,7 +18,8 @@ class DetectionEvaluator:
         self.model = model
         self.post_process = DetectPostProcess(model.get_anchor_box(),
                                               args.th_conf,
-                                              args.th_iou)
+                                              args.th_iou,
+                                              model.get_classifier())
 
         self.dataset = self.init_dataset()
         self.dataloader = self.init_dataloader()

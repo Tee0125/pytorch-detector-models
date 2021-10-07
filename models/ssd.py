@@ -155,6 +155,10 @@ class SSD(nn.Module):
     def get_input_size(self):
         return self.params['width'], self.params['width']
 
+    @staticmethod
+    def get_classifier():
+        return 'softmax'
+
     def build_extras(self):
         in_channels = self.calc_in_channel_width(self.b1)
 
