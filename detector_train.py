@@ -35,6 +35,8 @@ class Callback(TrainerCallback):
             print("Gamma: %.2f" % args.gamma)
         elif args.use_plateau_lr:
             print("Scheduler: ReduceLROnPlateau scheduler")
+        elif args.use_cosine_lr:
+            print("Scheduler: CosineAnnealingLR scheduler")
         else:
             print("Scheduler: None")
 
@@ -129,6 +131,8 @@ def main():
                         help='Step size for step lr scheduler')
     parser.add_argument('--use_multi_step_lr', default=False, action='store_true',
                         help='Use multi step lr scheduler')
+    parser.add_argument('--use_cosine_lr', default=False, action='store_true',
+                        help='Use cosine annealing lr scheduler')
     parser.add_argument('--milestones', default=[140, 170], type=int, nargs='*',
                         help='Milestones for multi step lr scheduler')
     parser.add_argument('--use_plateau_lr', default=False, action='store_true',

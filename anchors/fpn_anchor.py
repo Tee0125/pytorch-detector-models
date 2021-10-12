@@ -55,10 +55,10 @@ class FpnAnchor:
         anchor_wh = anchor[:, :, 2:4]
 
         # delta_x = (x - anchor_x) / anchor_width
-        delta_xy = (cxcy - anchor_cxcy) / anchor_wh
+        delta_xy = (cxcy - anchor_cxcy) / anchor_wh / 1.
 
         # delta_w = ln(width / anchor_width)
-        delta_wh = torch.log(wh / anchor_wh)
+        delta_wh = torch.log(wh / anchor_wh) / 1.
 
         encoded = torch.cat((delta_xy, delta_wh), 2)
         if not has_batch:
@@ -76,10 +76,10 @@ class FpnAnchor:
         anchor = self.anchors.expand_as(encoded)
 
         # delta_x * anchor_width + anchor_x
-        xy = encoded[:, :, 0:2] * anchor[:, :, 2:4] + anchor[:, :, 0:2]
+        xy = encoded[:, :, 0:2] * 1. * anchor[:, :, 2:4] + anchor[:, :, 0:2]
 
         # exp(delta_w) * anchor_width
-        half_wh = torch.exp(encoded[:, :, 2:4]) * anchor[:, :, 2:4] / 2.
+        half_wh = torch.exp(encoded[:, :, 2:4] * 1.) * anchor[:, :, 2:4] / 2.
 
         raw = torch.cat((xy - half_wh, xy + half_wh), 2)
         if not has_batch:

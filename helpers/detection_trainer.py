@@ -3,7 +3,7 @@ import multiprocessing
 import torch
 
 from torch.optim import SGD
-from torch.optim.lr_scheduler import StepLR, MultiStepLR, ReduceLROnPlateau
+from torch.optim.lr_scheduler import StepLR, MultiStepLR, ReduceLROnPlateau, CosineAnnealingLR
 
 from torch.utils.data import DataLoader
 
@@ -181,6 +181,11 @@ class DetectionTrainer:
 
         elif self.args.use_plateau_lr:
             return ReduceLROnPlateau(self.optimizer)
+
+        elif self.args.use_cosine_lr:
+            return CosineAnnealingLR(self.optimizer,
+                                     self.args.epochs,
+                                     1e-6)
 
         else:
             return None
